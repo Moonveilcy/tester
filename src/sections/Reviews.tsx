@@ -35,11 +35,18 @@ const reviews = [
         avatar: 'https://placehold.co/100x100/22d3ee/111827?text=SW',
         body: 'The UI is just beautiful. The colorful cards and smooth animations make managing repos actually enjoyable.',
         color: 'bg-cyan-300'
+    },
+    {
+        name: 'Eko J.',
+        handle: '@eko_devops',
+        avatar: 'https://placehold.co/100x100/4ade80/111827?text=EJ',
+        body: 'The delete path feature is powerful. It correctly handles both files and entire folders, which is super useful.',
+        color: 'bg-green-300'
     }
 ];
 
 const ReviewCard = ({ review }) => (
-    <div className={`w-[350px] flex-shrink-0 mx-4 p-6 rounded-lg text-black border-b-4 border-r-4 border-black ${review.color}`}>
+    <div className={`w-[350px] md:w-[400px] flex-shrink-0 mx-4 p-6 rounded-lg text-black border-b-4 border-r-4 border-black ${review.color} h-full`}>
         <div className="flex items-center mb-4">
             <img src={review.avatar} alt={review.name} className="w-14 h-14 rounded-full border-2 border-black" />
             <div className="ml-4">
@@ -47,13 +54,13 @@ const ReviewCard = ({ review }) => (
                 <p className="text-sm text-black/60">{review.handle}</p>
             </div>
         </div>
-        <p className="text-black/80 leading-relaxed">{review.body}</p>
+        <p className="text-black/80 leading-relaxed whitespace-normal">{review.body}</p>
     </div>
 );
 
-const Marquee = ({ reviews, direction = 'left' }) => (
-    <div className="relative flex overflow-x-hidden">
-        <div className={`py-8 flex whitespace-nowrap ${direction === 'left' ? 'animate-marquee-ltr' : 'animate-marquee-rtl'}`}>
+const Marquee = ({ reviews, reverse = false }) => (
+    <div className="marquee-container">
+        <div className={`marquee-content space-x-8 py-4 ${reverse ? 'marquee-reverse' : ''}`}>
             {[...reviews, ...reviews].map((review, index) => (
                 <ReviewCard key={`marquee-${index}`} review={review} />
             ))}
@@ -67,23 +74,29 @@ export default function Reviews() {
         <>
             <style>
                 {`
-                @keyframes marquee-ltr {
-                    0% { transform: translateX(0%); }
-                    100% { transform: translateX(-50%); }
+                .marquee-container {
+                    overflow: hidden;
+                    -webkit-mask-image: linear-gradient(to right, transparent, white 20%, white 80%, transparent);
+                    mask-image: linear-gradient(to right, transparent, white 20%, white 80%, transparent);
                 }
-                @keyframes marquee-rtl {
-                    0% { transform: translateX(-50%); }
-                    100% { transform: translateX(0%); }
+                .marquee-content {
+                    display: flex;
+                    width: max-content;
+                    animation: scroll 40s linear infinite;
                 }
-                .animate-marquee-ltr {
-                    animation: marquee-ltr 40s linear infinite;
+                .marquee-content.marquee-reverse {
+                    animation-direction: reverse;
                 }
-                .animate-marquee-rtl {
-                    animation: marquee-rtl 40s linear infinite;
+                .marquee-container:hover .marquee-content {
+                    animation-play-state: paused;
+                }
+                @keyframes scroll {
+                    from { transform: translateX(0); }
+                    to { transform: translateX(-50%); }
                 }
                 `}
             </style>
-            <section id="reviews" className="bg-white text-black py-16 lg:py-24">
+            <section id="reviews" className="bg-white text-black py-16 lg:py-24 overflow-hidden">
                 <div className="container mx-auto px-6 max-w-6xl text-center">
                      <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-800">
                         Loved by Developers
@@ -92,16 +105,20 @@ export default function Reviews() {
                         See what developers are saying about their experience with GitMoon.
                     </p>
                 </div>
+
                 <div className="mt-12 md:hidden">
                     <div className="container mx-auto px-6 space-y-8">
                         {reviews.map((review, index) => (
-                             <ReviewCard key={`static-${index}`} review={review} />
+                             <div key={`static-${index}`} className="flex justify-center">
+                                 <ReviewCard review={review} />
+                             </div>
                         ))}
                     </div>
                 </div>
-                <div className="hidden md:block mt-8">
-                    <Marquee reviews={reviews} direction="left" />
-                    <Marquee reviews={[...reviews].reverse()} direction="right" />
+
+                <div className="hidden md:block mt-8 space-y-8">
+                    <Marquee reviews={reviews} />
+                    <Marquee reviews={[...reviews].reverse()} reverse={true} />
                 </div>
             </section>
         </>
