@@ -5,7 +5,6 @@ const apiFetch = async (url: string, token: string, options: RequestInit = {}) =
     if (!cleanToken) {
         throw new Error("GitHub token is missing.");
     }
-
     const response = await fetch(`${GITHUB_API_BASE}${url}`, {
         ...options,
         headers: {
@@ -14,12 +13,10 @@ const apiFetch = async (url: string, token: string, options: RequestInit = {}) =
             'Accept': 'application/vnd.github.v3+json',
         },
     });
-
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: `GitHub API request failed with status: ${response.statusText}` }));
         throw new Error(errorData.message || `An unknown error occurred with status: ${response.status}`);
     }
-
     return response.json();
 };
 
@@ -50,31 +47,40 @@ export const getRepoTree = async (repoPath: string, token: string) => {
     return treeData.tree.map((file: { path: string }) => file.path);
 };
 
+export const getTechStackFromPkg = async (repoPath: string, token: string): Promise<string[]> => {
+    try {
+        const pkgContentResponse = await apiFetch(`/repos/${repoPath}/contents/package.json`, token);
+        const pkgContent = atob(pkgContentResponse.content);
+        const pkgJson = JSON.parse(pkgContent);
+        const dependencies = Object.keys(pkgJson.dependencies || {});
+        const devDependencies = Object.keys(pkgJson.devDependencies || {});
+        return [...new Set([...dependencies, ...devDependencies])];
+    } catch (error) {
+        console.warn("Could not fetch or parse package.json. Tech stack detection will be limited.");
+        return [];
+    }
+};
+
+
 export const generateReadmeContent = async (prompt: string, geminiKey: string): Promise<string> => {
     const cleanGeminiKey = geminiKey.trim();
     if (!cleanGeminiKey) {
         throw new Error("Gemini API Key is missing.");
     }
-    
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${cleanGeminiKey}`;
-    
     const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
     });
-
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: { message: 'Failed to parse Gemini API error response.' }}));
         throw new Error(errorData.error?.message || `Gemini API request failed with status: ${response.statusText}`);
     }
-
     const result = await response.json();
     const content = result.candidates?.[0]?.content?.parts?.[0]?.text;
-    
     if (!content) {
         throw new Error("Failed to extract content from Gemini API response.");
     }
-
     return content.replace(/^```markdown\s*|```$/g, "").trim();
 };

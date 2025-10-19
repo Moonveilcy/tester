@@ -48,7 +48,10 @@ export const useReadmeGenerator = () => {
         try {
             const details: RepoDetails = await readmeApi.getRepoDetails(repoPath, githubToken);
             const files = await readmeApi.getRepoTree(repoPath, githubToken);
-            const prompt = createReadmePrompt(details, files, options, tags);
+            const pkgTech = await readmeApi.getTechStackFromPkg(repoPath, githubToken);
+            
+            const prompt = createReadmePrompt(details, files, options, tags, pkgTech);
+
             const readmeContent = await readmeApi.generateReadmeContent(prompt, geminiKey);
             setGeneratedReadme(readmeContent);
             setNotification({ message: 'README generated successfully!', type: 'success' });
