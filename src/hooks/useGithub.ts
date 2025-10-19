@@ -8,6 +8,12 @@ export type NotificationType = {
   type: 'success' | 'error';
 };
 
+// Tipe data baru untuk menyimpan struktur file repo
+interface RepoTreeItem {
+  path: string;
+  type: 'blob' | 'tree';
+}
+
 export const useGitHub = () => {
   // --- STATE MANAGEMENT ---
   const [token, setToken] = useState('');
@@ -19,11 +25,15 @@ export const useGitHub = () => {
   const [files, setFiles] = useState<RepoFile[]>([]);
   const [commits, setCommits] = useState<Commit[]>([]);
   
+  // State baru untuk menyimpan hasil scan repo
+  const [repoTree, setRepoTree] = useState<RepoTreeItem[]>([]);
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   
   const [notification, setNotification] = useState<NotificationType | null>(null);
 
+  // --- EFFECTS ---
   useEffect(() => {
     const storedToken = localStorage.getItem('githubToken');
     if (storedToken) {
@@ -39,19 +49,25 @@ export const useGitHub = () => {
     }
   }, [token, storeToken]);
 
+  // --- CORE FUNCTIONS ---
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
   };
 
   const processFiles = useCallback((fileList: FileList) => {
-    const newFiles: RepoFile[] = Array.from(fileList).map(file => ({
-      name: file.name,
-      path: file.name, 
-      content: '', 
-      status: 'idle',
-      commitType: 'feat',
-      commitMessage: '',
-    }));
+    const newFiles: RepoFile[] = Array.from(fileList).map(file => {
+      // PERBAIKAN: Cari path otomatis dari repoTree
+      const existingFile = repoTree.find(item => item.path.endsWith(`/${file.name}`) || item.path === file.name);
+      
+      return {
+        name: file.name,
+        path: existingFile ? existingFile.path : file.name, // Gunakan path yang ada jika ditemukan
+        content: '',
+        status: 'idle',
+        commitType: 'feat',
+        commitMessage: '',
+      }
+    });
     setFiles(prev => [...prev, ...newFiles]);
 
     newFiles.forEach((_, index) => {
@@ -62,7 +78,7 @@ export const useGitHub = () => {
         };
         reader.readAsText(fileList[index]);
     });
-  }, []);
+  }, [repoTree]); // Tambahkan repoTree sebagai dependency
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
@@ -85,15 +101,20 @@ export const useGitHub = () => {
     }));
   };
 
+  // --- API HANDLERS ---
   const handleScanRepo = useCallback(async () => {
     if (!repo || !branch || !token) {
         showNotification('Please fill in repository, branch, and token.', 'error');
         return;
     }
     setIsScanning(true);
+    setRepoTree([]); // Kosongkan tree sebelum scan baru
     try {
         const data = await githubApi.scanRepoTree(repo, branch, token);
-        showNotification(`Scanned ${data.tree.length} files from the repository.`, 'success');
+        // PERBAIKAN: Filter untuk hanya menyimpan file (blob)
+        const fileBlobs = data.tree.filter((item: RepoTreeItem) => item.type === 'blob');
+        setRepoTree(fileBlobs);
+        showNotification(`Scan complete. Found ${fileBlobs.length} files in the repository.`, 'success');
     } catch (error) {
         showNotification((error as Error).message, 'error');
     } finally {
@@ -153,6 +174,7 @@ export const useGitHub = () => {
     }
   }, [files, repo, branch, token, handleFetchCommits]);
 
+  // --- RETURNED VALUES ---
   return {
     token, setToken,
     storeToken, setStoreToken,
