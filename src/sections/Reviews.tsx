@@ -97,11 +97,11 @@ export default function Reviews() {
                 `}
             </style>
             <section id="reviews" className="bg-white text-black py-16 lg:py-24 overflow-hidden">
-                <div className="container mx-auto px-6 max-w-6xl text-center">
-                     <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-800">
+                <div className="container mx-auto px-6 max-w-6xl">
+                     <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-800 text-left">
                         Loved by Developers
                     </h2>
-                    <p className="text-lg lg:text-xl text-gray-600 max-w-3xl leading-relaxed mx-auto">
+                    <p className="text-lg lg:text-xl text-gray-600 max-w-3xl leading-relaxed text-left">
                         See what developers are saying about their experience with GitMoon.
                     </p>
                 </div>
@@ -116,7 +116,7 @@ export default function Reviews() {
                     </div>
                 </div>
 
-                <div className="hidden md:block mt-8 space-y-8">
+                <div className="hidden md:block mt-12 space-y-8">
                     <Marquee reviews={reviews} />
                     <Marquee reviews={[...reviews].reverse()} reverse={true} />
                 </div>

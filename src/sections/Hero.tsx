@@ -15,51 +15,87 @@ const UnapologeticButton = ({ href, children, className, variant = 'primary' }) 
   );
 
   const buttonWrapperClasses = `relative w-full sm:w-auto group ${className}`;
-  const buttonClasses = `${baseClasses} ${variantClasses[variant]} 
-                         border-b-4 border-r-4 border-black 
-                         group-hover:border-b-2 group-hover:border-r-2 
-                         group-hover:translate-x-0.5 group-hover:translate-y-0.5`;
+  const buttonClasses = `${baseClasses} ${variantClasses[variant]} border-b-4 border-r-4 border-black group-hover:border-b-2 group-hover:border-r-2 group-hover:translate-x-0.5 group-hover:translate-y-0.5`;
   
-  if (href) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={buttonWrapperClasses}>
-        <div className={buttonClasses}>
-          {buttonContent}
-        </div>
-      </a>
-    );
-  }
-
   return (
-    <button className={buttonWrapperClasses}>
-      <div className={buttonClasses}>
-        {buttonContent}
-      </div>
-    </button>
+    <a href={href || '#'} className={buttonWrapperClasses}>
+      <div className={buttonClasses}>{buttonContent}</div>
+    </a>
   );
 };
 
+const Rating = ({ className }) => (
+  <div className={`flex items-center gap-3 ${className}`}>
+    <img 
+      src="/rate.png" 
+      alt="Rating" 
+      className="w-8 h-8" 
+      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+    />
+    <div>
+      <p className="font-bold text-gray-800">Rated 4.8 / 5</p>
+      <p className="text-sm text-gray-500">1,000+ Reviews</p>
+    </div>
+  </div>
+);
+
+const FeatureMarquee = () => {
+  const marqueeItems = [
+    "README Generator", "GitHub Repository", "Commit & Push", "Client-Side Security", 
+    "Delete Path", "Mobile First", "AI Powered", "Text & Markdown"
+  ];
+  return (
+    <>
+      <style>{`
+        .marquee-container-hero {
+          overflow: hidden;
+          -webkit-mask-image: linear-gradient(to right, transparent, white 10%, white 90%, transparent);
+          mask-image: linear-gradient(to right, transparent, white 10%, white 90%, transparent);
+        }
+        .marquee-content-hero {
+          display: flex;
+          width: max-content;
+          animation: scroll-hero 30s linear infinite;
+        }
+        @keyframes scroll-hero {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+      `}</style>
+      <div className="marquee-container-hero mt-16 lg:mt-24">
+        <div className="marquee-content-hero">
+          {[...marqueeItems, ...marqueeItems].map((item, index) => (
+            <div key={index} className="mx-4 px-6 py-2 rounded-md border-2 border-gray-300 bg-gray-100 text-gray-600 font-semibold whitespace-nowrap">
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
+
+
 export default function Hero() {
   return (
-    <section id="home" className="bg-white text-black flex items-center py-20 lg:py-28">
+    <section id="home" className="bg-white text-black overflow-hidden pt-20 pb-12 lg:pt-28 lg:pb-20">
       <div className="container mx-auto px-6 max-w-6xl"> 
-        <div className="flex flex-col md:flex-row items-center justify-between gap-12 lg:gap-16">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           
-          <div className="md:w-1/2 text-center md:text-left">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight text-gray-800">
+          <div className="md:w-1/2 w-full text-left">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-gray-800">
               <span className="bg-gradient-to-r from-purple-500 to-yellow-500 bg-clip-text text-transparent">
                 Push. Commit. Automate.
               </span>
             </h1>
-            <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-8 sm:mb-10 max-w-lg mx-auto md:mx-0">
+            <p className="text-lg lg:text-xl text-gray-600 mb-8 max-w-lg">
               GitMoon helps you manage GitHub repositories directly from mobile — commit, upload, and document with ease.
             </p>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 sm:gap-6">
+            <div className="flex flex-col sm:flex-row items-start justify-start gap-4 sm:gap-6">
               <UnapologeticButton variant="primary">
                 Try Now
               </UnapologeticButton>
-              
               <UnapologeticButton 
                 href="https://github.com" 
                 variant="secondary"
@@ -68,18 +104,23 @@ export default function Hero() {
                 View on GitHub
               </UnapologeticButton>
             </div>
+
+            <Rating className="hidden md:flex mt-10" />
           </div>
           
-          <div className="md:w-1/2 flex justify-center md:justify-end mt-10 md:mt-0">
+          <div className="md:w-1/2 w-full flex flex-col items-center mt-8 md:mt-0">
             <img 
               src="/gitmoon.png" 
               alt="GitMoon Illustration" 
               className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg h-auto rounded-lg"
               onError={(e) => { e.currentTarget.src = 'https://placehold.co/600x400/e5e7eb/1f2937?text=GitMoon'; }}
             />
+            <Rating className="md:hidden mt-8" />
           </div>
 
         </div>
+
+        <FeatureMarquee />
       </div>
     </section>
   );
