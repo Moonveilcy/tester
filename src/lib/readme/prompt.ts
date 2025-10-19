@@ -65,11 +65,14 @@ export const createReadmePrompt = (
         outro: "Ensure the output is ONLY raw Markdown content, without extra explanations."
     };
 
+    const techStackContent = `Based on the repository details and user tags, list the technologies used. VERY IMPORTANT: For each technology, generate a Markdown badge from shields.io using the 'for-the-badge' style. Example: [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://www.javascript.com/)`;
+    const installationContent = `Provide a step-by-step guide. CRITICAL: Each terminal command (like git clone, npm install, npm start) MUST be in its own separate 'bash' code block for clarity.`;
+
     const fileTreeSection = createSection(options.includeFileTree, `### ${t.fileTree}`, formatFileTree(files));
-    const featuresSection = createSection(options.includeFeatures, `### ${t.features}`, `- (Jelaskan fitur utama di sini)`);
-    const techStackSection = createSection(options.includeTechStack, `### ${t.techStack}`, `- (Sebutkan teknologi yang digunakan)`);
-    const installationSection = createSection(options.includeInstallation, `### ${t.installation}`, "```bash\n# Langkah-langkah instalasi\n```");
-    const contributingSection = createSection(options.includeContributing, `### ${t.contributing}`, `- (Jelaskan cara berkontribusi)`);
+    const featuresSection = createSection(options.includeFeatures, `### ${t.features}`, `- (Explain key features here)`);
+    const techStackSection = createSection(options.includeTechStack, `### ${t.techStack}`, techStackContent);
+    const installationSection = createSection(options.includeInstallation, `### ${t.installation}`, installationContent);
+    const contributingSection = createSection(options.includeContributing, `### ${t.contributing}`, `- (Explain how to contribute here)`);
 
     return `
 ${t.promptIntro}
@@ -86,7 +89,7 @@ Generate a README.md with the following structure. Be detailed and elaborate on 
 
 # ${details.name}
 
-(Include relevant badges from Shields.io for language, etc.)
+(Include relevant general badges from Shields.io for language, license, etc.)
 
 ### ${t.description}
 (Write a compelling 2-3 paragraph description here.)
