@@ -44,7 +44,6 @@ export const createReadmePrompt = (
     tags: string[]
 ): string => {
     const t = options.language === 'id' ? {
-        title: "Judul Proyek",
         description: "Deskripsi Proyek 📝",
         fileTree: "Struktur File 🌳",
         features: "Fitur Utama ✨",
@@ -54,7 +53,6 @@ export const createReadmePrompt = (
         promptIntro: "Sebagai seorang Principal Software Engineer, buatkan file README.md yang sangat detail dan profesional. Gunakan emoji yang relevan.",
         outro: "Pastikan output HANYA berupa konten Markdown mentah, tanpa penjelasan tambahan."
     } : {
-        title: "Project Title",
         description: "Project Description 📝",
         fileTree: "File Structure 🌳",
         features: "Key Features ✨",
@@ -65,12 +63,14 @@ export const createReadmePrompt = (
         outro: "Ensure the output is ONLY raw Markdown content, without extra explanations."
     };
 
-    const techStackContent = `Based on the repository details and user tags, list the technologies used. VERY IMPORTANT: For each technology, generate a Markdown badge from shields.io using the 'for-the-badge' style. Example: [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://www.javascript.com/)`;
+    const allTech = [...new Set([details.language, ...tags])];
+    const techBadgesInstruction = `Generate a list of Markdown badges from shields.io for the following technologies using the 'for-the-badge' style. Technologies: ${allTech.join(', ')}. Example: [![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://www.javascript.com/)`;
+
     const installationContent = `Provide a step-by-step guide. CRITICAL: Each terminal command (like git clone, npm install, npm start) MUST be in its own separate 'bash' code block for clarity.`;
 
     const fileTreeSection = createSection(options.includeFileTree, `### ${t.fileTree}`, formatFileTree(files));
-    const featuresSection = createSection(options.includeFeatures, `### ${t.features}`, `- (Explain key features here)`);
-    const techStackSection = createSection(options.includeTechStack, `### ${t.techStack}`, techStackContent);
+    const featuresSection = createSection(options.includeFeatures, `### ${t.features}`, `- (Explain key features here based on repo description and file names)`);
+    const techStackSection = createSection(options.includeTechStack, `### ${t.techStack}`, techBadgesInstruction);
     const installationSection = createSection(options.includeInstallation, `### ${t.installation}`, installationContent);
     const contributingSection = createSection(options.includeContributing, `### ${t.contributing}`, `- (Explain how to contribute here)`);
 
@@ -80,16 +80,15 @@ ${t.promptIntro}
 **Repository Details:**
 - Name: ${details.name}
 - Description: ${details.description || "No description provided."}
-- Main Language: ${details.language}
-- User Tags: ${tags.join(', ')}
+- All Technologies: ${allTech.join(', ')}
 - File List (sample): ${files.slice(0, 20).join(', ')}
 
 **Instructions (Follow Strictly):**
-Generate a README.md with the following structure. Be detailed and elaborate on each section based on the repository details.
+Generate a README.md with the following structure.
 
 # ${details.name}
 
-(Include relevant general badges from Shields.io for language, license, etc.)
+${options.includeTechStack ? '' : techBadgesInstruction}
 
 ### ${t.description}
 (Write a compelling 2-3 paragraph description here.)
