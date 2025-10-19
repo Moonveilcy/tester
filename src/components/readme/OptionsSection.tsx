@@ -48,6 +48,10 @@ export function OptionsSection({ options, setOptions, tags, setTags }: OptionsSe
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
+  if (!options) {
+    return null;
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
       <Card className="bg-blue-100">
