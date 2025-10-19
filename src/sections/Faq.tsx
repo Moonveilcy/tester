@@ -55,9 +55,8 @@ export default function Faq() {
     return (
         <section id="faq" className="bg-white text-black py-16 lg:py-24">
             <div className="container mx-auto px-6 max-w-6xl">
-                <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
-
-                    <div className="lg:w-1/2 w-full order-2 lg:order-1 text-left">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-12 md:gap-16">                    
+                    <div className="md:w-1/2 w-full order-2 md:order-1 text-left">
                         <div className="mb-10">
                             <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-800">
                                 Frequently Asked Questions
@@ -78,8 +77,7 @@ export default function Faq() {
                             ))}
                         </div>
                     </div>
-                    
-                    <div className="lg:w-1/2 w-full order-1 lg:order-2 flex justify-center lg:justify-end">
+                    <div className="md:w-1/2 w-full order-1 md:order-2 flex justify-center md:justify-end">
                          <img 
                             src="/faq.png" 
                             alt="FAQ Illustration" 
