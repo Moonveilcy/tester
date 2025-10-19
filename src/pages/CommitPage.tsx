@@ -5,6 +5,7 @@ import { FileUploadSection } from '../components/commit/FileUploadSection';
 import { ActionsSection } from '../components/commit/ActionsSection';
 import { CommitLogSection } from '../components/commit/CommitLogSection';
 import { DeleteSection } from '../components/commit/DeleteSection';
+import { GuideSection } from '../components/commit/GuideSection'; // Impor komponen baru
 
 export default function CommitPage() {
   const github = useGitHub();
@@ -63,6 +64,10 @@ export default function CommitPage() {
             <CommitLogSection commits={github.commits} />
           </div>
         </div>
+        <div className="mt-16">
+          <GuideSection />
+        </div>
+
       </main>
     </div>
   );
