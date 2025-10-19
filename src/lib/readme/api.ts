@@ -1,52 +1,80 @@
 const GITHUB_API_BASE = "https://api.github.com";
 
-export const parseGithubUrl = (url: string): string | null => {
-    const match = url.match(/github\.com\/([^\/]+\/[^\/]+)/);
-    return match ? match[1].replace(".git", "") : null;
-};
-
-const githubFetch = async (url: string, token?: string) => {
-    const headers: HeadersInit = { 'Accept': 'application/vnd.github.v3+json' };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+const apiFetch = async (url: string, token: string, options: RequestInit = {}) => {
+    const cleanToken = token.trim();
+    if (!cleanToken) {
+        throw new Error("GitHub token is missing.");
     }
-    const response = await fetch(`${GITHUB_API_BASE}${url}`, { headers });
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || `GitHub API Error: ${response.status}`);
-    }
-    return response.json();
-};
 
-export const getRepoDetails = (repoPath: string, token: string) => 
-    githubFetch(`/repos/${repoPath}`, token);
-
-export const getRepoTree = async (repoPath: string, token: string, defaultBranch: string) => {
-    const data = await githubFetch(`/repos/${repoPath}/git/trees/${defaultBranch}?recursive=1`, token);
-    return data.tree.map((file: { path: string }) => file.path);
-};
-
-export const generateReadmeContent = async (prompt: string, apiKey: string): Promise<string> => {
-    if (!apiKey) throw new Error("Gemini API Key is required.");
-    
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    const payload = { contents: [{ parts: [{ text: prompt }] }] };
-
-    const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+    const response = await fetch(`${GITHUB_API_BASE}${url}`, {
+        ...options,
+        headers: {
+            ...options.headers,
+            'Authorization': `Bearer ${cleanToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+        },
     });
 
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Gemini API Error: ${errorData.error?.message || response.statusText}`);
+        const errorData = await response.json().catch(() => ({ message: `GitHub API request failed with status: ${response.statusText}` }));
+        throw new Error(errorData.message || `An unknown error occurred with status: ${response.status}`);
+    }
+
+    return response.json();
+};
+
+export const parseGithubUrl = (url: string): string | null => {
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname !== 'github.com') return null;
+        const pathParts = urlObj.pathname.split('/').filter(part => part);
+        if (pathParts.length >= 2) {
+            return `${pathParts[0]}/${pathParts[1]}`;
+        }
+        return null;
+    } catch (error) {
+        return null;
+    }
+};
+
+export const getRepoDetails = (repoPath: string, token: string) =>
+    apiFetch(`/repos/${repoPath}`, token);
+
+export const getRepoTree = async (repoPath: string, token: string) => {
+    const repoDetails = await getRepoDetails(repoPath, token);
+    const defaultBranch = repoDetails.default_branch;
+    if (!defaultBranch) {
+        throw new Error("Could not determine the default branch for the repository.");
+    }
+    const treeData = await apiFetch(`/repos/${repoPath}/git/trees/${defaultBranch}?recursive=1`, token);
+    return treeData.tree.map((file: { path: string }) => file.path);
+};
+
+export const generateReadmeContent = async (prompt: string, geminiKey: string): Promise<string> => {
+    const cleanGeminiKey = geminiKey.trim();
+    if (!cleanGeminiKey) {
+        throw new Error("Gemini API Key is missing.");
     }
     
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
-        throw new Error("Failed to extract content from Gemini response.");
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${cleanGeminiKey}`;
+    
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: { message: 'Failed to parse Gemini API error response.' }}));
+        throw new Error(errorData.error?.message || `Gemini API request failed with status: ${response.statusText}`);
     }
-    return text.replace(/^```markdown\s*/, "").replace(/```$/, "").trim();
+
+    const result = await response.json();
+    const content = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!content) {
+        throw new Error("Failed to extract content from Gemini API response.");
+    }
+
+    return content.replace(/^```markdown\s*|```$/g, "").trim();
 };
