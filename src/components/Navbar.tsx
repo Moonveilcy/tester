@@ -1,82 +1,62 @@
 import { useState } from 'react';
-// PERUBAHAN: Import Link dari react-router-dom
-import { Link } from 'react-router-dom';
-import { Moon, Menu, X } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
+import { Menu, X, Moon } from 'lucide-react';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+
   const navLinks = [
-    { name: 'Home', to: '/' },
-    { name: 'Commit & Push', to: '/commit' },
-    { name: 'Discord', to: 'https://discord.com', isExternal: true },
+    { name: 'Home', path: '/' },
+    { name: 'Commit & Push', path: '/commit' },
+    { name: 'README Gen', path: '/readme' },
+    { name: 'Discord', path: 'https://discord.gg/FnEe7xcYZQ', external: true },
   ];
 
-  return (
-    <nav className="bg-white text-black relative">
-      <div className="container mx-auto px-6 max-w-6xl">
-        <div className="flex items-center justify-between h-20">
-          <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center gap-2">
-              <Moon className="w-8 h-8 text-purple-600" />
-              <span className="text-2xl font-bold text-gray-800">
-                GitMoon
-              </span>
-            </Link>
-          </div>
+  const linkClass = "text-gray-600 hover:text-black font-semibold transition-colors";
+  const activeLinkClass = "text-black font-bold";
 
-          <div className="hidden md:flex flex-grow items-center justify-center">
-            <div className="flex items-baseline space-x-6">
+  return (
+    <nav className="bg-white/80 backdrop-blur-md w-full shadow-sm">
+      <div className="container mx-auto px-6">
+        <div className="flex items-center justify-between h-20">
+          <Link to="/" className="flex items-center gap-2">
+            <Moon className="w-7 h-7 text-purple-600" />
+            <span className="text-2xl font-bold text-gray-800">GitMoon</span>
+          </Link>
+          
+          <div className="hidden md:flex items-center justify-center flex-1">
+            <div className="flex items-baseline space-x-8">
               {navLinks.map((link) => 
-                link.isExternal ? (
-                  <a key={link.name} href={link.to} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-purple-600 font-medium transition-colors duration-200">
-                    {link.name}
-                  </a>
+                link.external ? (
+                  <a key={link.name} href={link.path} target="_blank" rel="noopener noreferrer" className={linkClass}>{link.name}</a>
                 ) : (
-                  <Link
-                    key={link.name}
-                    to={link.to}
-                    className="text-gray-600 hover:text-purple-600 font-medium transition-colors duration-200"
-                  >
+                  <NavLink key={link.name} to={link.path} className={({ isActive }) => isActive ? activeLinkClass : linkClass}>
                     {link.name}
-                  </Link>
+                  </NavLink>
                 )
               )}
             </div>
           </div>
           
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-purple-600 focus:outline-none"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isOpen ? <X className="block h-6 w-6" /> : <Menu className="block h-6 w-6" />}
+          <div className="md:hidden">
+            <button onClick={() => setIsOpen(!isOpen)} className="text-gray-800 hover:text-black">
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
       </div>
-
+      
       {isOpen && (
-        <div className="md:hidden border-t border-gray-200">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {navLinks.map((link) => 
-               link.isExternal ? (
-                <a key={link.name} href={link.to} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-purple-600 block px-3 py-2 rounded-md text-base font-medium">
-                  {link.name}
-                </a>
-               ) : (
-                <Link
-                  key={link.name}
-                  to={link.to}
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-600 hover:text-purple-600 block px-3 py-2 rounded-md text-base font-medium"
-                >
-                  {link.name}
-                </Link>
-               )
-            )}
-          </div>
+        <div className="md:hidden px-6 pt-2 pb-4 space-y-2 border-t border-gray-200">
+           {navLinks.map((link) => 
+            link.external ? (
+              <a key={link.name} href={link.path} target="_blank" rel="noopener noreferrer" className={`${linkClass} block py-2`}>{link.name}</a>
+            ) : (
+              <NavLink key={link.name} to={link.path} onClick={() => setIsOpen(false)} className={({ isActive }) => `${isActive ? activeLinkClass : linkClass} block py-2`}>
+                {link.name}
+              </NavLink>
+            )
+          )}
         </div>
       )}
     </nav>
