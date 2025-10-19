@@ -1,63 +1,81 @@
-import { motion } from 'framer-motion';
-import { Moon } from 'lucide-react';
+import { useState } from 'react';
+import { Moon, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
-  return (
-    <motion.nav
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-slate-900/70 border-b border-indigo-500/20"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <motion.div
-            className="flex items-center gap-2"
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 400 }}
-          >
-            <Moon className="w-8 h-8 text-indigo-400" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent animate-pulse">
-              GitMoon
-            </span>
-          </motion.div>
+  const [isOpen, setIsOpen] = useState(false);
 
-          <div className="hidden md:flex items-center gap-8">
-            <a
-              href="#home"
-              className="text-gray-300 hover:text-indigo-400 transition-colors duration-200"
-            >
-              Home
+  const navLinks = [
+    { name: 'Home', href: '#home' },
+    { name: 'Commit & Push', href: '#' },
+    { name: 'Discord', href: '#' },
+  ];
+
+  return (
+    <nav className="bg-white text-black relative shadow-sm">
+      <div className="container mx-auto px-6 max-w-6xl">
+        <div className="flex items-center justify-between h-20">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <a href="#home" className="flex items-center gap-2">
+              <Moon className="w-8 h-8 text-purple-600" />
+              <span className="text-2xl font-bold text-gray-800">
+                GitMoon
+              </span>
             </a>
-            <a
-              href="#about"
-              className="text-gray-300 hover:text-indigo-400 transition-colors duration-200"
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex flex-grow items-center justify-center">
+            <div className="flex items-baseline space-x-6">
+              {navLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-gray-600 hover:text-purple-600 font-medium transition-colors duration-200"
+                >
+                  {link.name}
+                </a>
+              ))}
+            </div>
+          </div>
+          
+          {/* Hamburger Button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              type="button"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-purple-600 focus:outline-none"
+              aria-controls="mobile-menu"
+              aria-expanded="false"
             >
-              About
-            </a>
-            <a
-              href="#features"
-              className="text-gray-300 hover:text-indigo-400 transition-colors duration-200"
-            >
-              Features
-            </a>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-300 hover:text-indigo-400 transition-colors duration-200"
-            >
-              GitHub
-            </a>
-            <a
-              href="#docs"
-              className="text-gray-300 hover:text-indigo-400 transition-colors duration-200"
-            >
-              Docs
-            </a>
+              <span className="sr-only">Open main menu</span>
+              {isOpen ? (
+                <X className="block h-6 w-6" aria-hidden="true" />
+              ) : (
+                <Menu className="block h-6 w-6" aria-hidden="true" />
+              )}
+            </button>
           </div>
         </div>
       </div>
-    </motion.nav>
+
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="md:hidden" id="mobile-menu">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={() => setIsOpen(false)}
+                className="text-gray-600 hover:text-purple-600 block px-3 py-2 rounded-md text-base font-medium"
+              >
+                {link.name}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+    </nav>
   );
 }
