@@ -11,10 +11,9 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white text-black relative shadow-sm">
+    <nav className="bg-white text-black relative">
       <div className="container mx-auto px-6 max-w-6xl">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
           <div className="flex-shrink-0">
             <a href="#home" className="flex items-center gap-2">
               <Moon className="w-8 h-8 text-purple-600" />
@@ -24,7 +23,6 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Desktop Menu */}
           <div className="hidden md:flex flex-grow items-center justify-center">
             <div className="flex items-baseline space-x-6">
               {navLinks.map((link) => (
@@ -39,7 +37,6 @@ export default function Navbar() {
             </div>
           </div>
           
-          {/* Hamburger Button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -59,7 +56,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden" id="mobile-menu">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 border-t border-gray-200">

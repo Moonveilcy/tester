@@ -2,7 +2,7 @@ import { Github, Twitter, MessageCircle } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-200">
+    <footer className="bg-white">
       <div className="container mx-auto px-6 py-8 max-w-6xl">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-500 text-sm">
@@ -11,7 +11,7 @@ export default function Footer() {
 
           <div className="flex items-center gap-5">
             <a
-              href="https://github.com/Gaeuly/GitMoon"
+              href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-500 hover:text-purple-600 transition-colors duration-200"

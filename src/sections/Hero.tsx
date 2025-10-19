@@ -39,10 +39,9 @@ const UnapologeticButton = ({ href, children, className, variant = 'primary' }) 
   );
 };
 
-
 export default function Hero() {
   return (
-    <section id="home" className="min-h-screen bg-white text-black flex items-center py-16 lg:py-24">
+    <section id="home" className="bg-white text-black flex items-center py-20 lg:py-28">
       <div className="container mx-auto px-6 max-w-6xl"> 
         <div className="flex flex-col md:flex-row items-center justify-between gap-12 lg:gap-16">
           
