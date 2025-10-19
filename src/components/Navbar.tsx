@@ -17,8 +17,8 @@ export default function Navbar() {
     { name: 'Discord', path: 'https://discord.gg/your-invite', icon: DiscordIcon, external: true },
   ];
   
-  const linkClass = "flex items-center gap-4 px-4 py-3 rounded-md text-gray-400 hover:text-white hover:bg-gray-700/50 transition-colors duration-200";
-  const activeLinkClass = "bg-gray-800 text-white font-semibold";
+  const linkClass = "flex items-center gap-4 px-4 py-3 rounded-md text-gray-400 hover:text-white hover:bg-gray-800 transition-colors duration-200";
+  const activeLinkClass = "bg-gray-700 text-white font-semibold";
 
   return (
     <>
@@ -72,12 +72,12 @@ export default function Navbar() {
             leaveTo="-translate-x-full"
           >
             <div className="fixed inset-y-0 left-0 flex">
-              <div className="w-screen max-w-xs bg-gray-900 text-white flex flex-col p-4">
+              <div className="w-screen max-w-xs bg-black text-white flex flex-col p-4">
                 <div className="flex items-center justify-between mb-8">
                   <span className="text-2xl font-bold">Menu</span>
                   <button 
                     onClick={() => setIsOpen(false)}
-                    className="p-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-white"
+                    className="p-2 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-white"
                     aria-label="Close menu"
                   >
                     <X className="w-6 h-6" />
