@@ -1,5 +1,5 @@
 import { Language } from '../../types/readme';
-import { Card, CardContent, CardHeader, CardTitle } from "./Shared";
+import { Card, CardContent, CardHeader, CardTitle } from "../commit/Shared";
 
 interface OptionsSectionProps {
   options: {
