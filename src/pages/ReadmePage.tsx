@@ -23,9 +23,27 @@ export default function ReadmePage() {
                     <p className="text-lg text-gray-600 mt-2">Generate a professional README.md for your repository with AI.</p>
                 </div>
 
-                <ConfigSection hook={readme} />
-                <OptionsSection hook={readme} />
-                <OutputSection hook={readme} />
+                <ConfigSection 
+                    repoUrl={readme.repoUrl}
+                    setRepoUrl={readme.setRepoUrl}
+                    githubToken={readme.githubToken}
+                    setGithubToken={readme.setGithubToken}
+                    geminiKey={readme.geminiKey}
+                    setGeminiKey={readme.setGeminiKey}
+                    isLoading={readme.isLoading}
+                    handleGenerate={readme.handleGenerate}
+                />
+                <OptionsSection 
+                    options={readme.options}
+                    setOptions={readme.setOptions}
+                    tags={readme.tags}
+                    setTags={readme.setTags}
+                />
+                <OutputSection 
+                    isLoading={readme.isLoading}
+                    generatedReadme={readme.generatedReadme}
+                    setNotification={readme.setNotification}
+                />
             </main>
         </div>
     );

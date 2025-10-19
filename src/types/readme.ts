@@ -1,3 +1,5 @@
+export type Language = 'en' | 'id' | 'zh' | 'ja' | 'ko';
+
 export interface RepoDetails {
   name: string;
   description: string | null;
@@ -6,7 +8,7 @@ export interface RepoDetails {
 }
 
 export interface ReadmeOptions {
-  language: 'en' | 'id';
+  language: Language;
   includeFileTree: boolean;
   includeFeatures: boolean;
   includeTechStack: boolean;

@@ -1,12 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import * as readmeApi from '../lib/readme/api';
 import { createReadmePrompt } from '../lib/readme/prompt';
-import { ReadmeOptions, RepoDetails } from '../types/readme';
+import { ReadmeOptions, RepoDetails, Language } from '../types/readme';
 import { NotificationType } from './useGithub';
 
 export const useReadmeGenerator = () => {
-    const [githubToken, setGithubToken] = useState(localStorage.getItem('githubToken') || '');
-    const [geminiKey, setGeminiKey] = useState(localStorage.getItem('geminiApiKey') || '');
+    const [githubToken, setGithubToken] = useState('');
+    const [geminiKey, setGeminiKey] = useState('');
     const [repoUrl, setRepoUrl] = useState('');
 
     const [options, setOptions] = useState<ReadmeOptions>({
@@ -22,6 +22,13 @@ export const useReadmeGenerator = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [generatedReadme, setGeneratedReadme] = useState('');
     const [notification, setNotification] = useState<NotificationType | null>(null);
+
+    useEffect(() => {
+        const storedGithubToken = localStorage.getItem('githubToken');
+        const storedGeminiKey = localStorage.getItem('geminiApiKey');
+        if (storedGithubToken) setGithubToken(storedGithubToken);
+        if (storedGeminiKey) setGeminiKey(storedGeminiKey);
+    }, []);
 
     const handleGenerate = useCallback(async () => {
         const repoPath = readmeApi.parseGithubUrl(repoUrl);
@@ -40,7 +47,7 @@ export const useReadmeGenerator = () => {
 
         try {
             const details: RepoDetails = await readmeApi.getRepoDetails(repoPath, githubToken);
-            const files = await readmeApi.getRepoTree(repoPath, githubToken, 'main'); // Assuming 'main' branch
+            const files = await readmeApi.getRepoTree(repoPath, githubToken);
             const prompt = createReadmePrompt(details, files, options, tags);
             const readmeContent = await readmeApi.generateReadmeContent(prompt, geminiKey);
             setGeneratedReadme(readmeContent);
