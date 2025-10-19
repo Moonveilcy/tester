@@ -30,7 +30,7 @@ export const getFileContent = async (repo: string, path: string, branch: string,
         return data ? atob(data.content) : "";
     } catch (error) {
         if ((error as Error).message.includes("Not Found")) {
-            return ""; // File tidak ditemukan, anggap kontennya kosong
+            return "";
         }
         throw error;
     }
@@ -48,7 +48,7 @@ const createBlob = (repo: string, content: string, token: string) =>
         body: JSON.stringify({ content: btoa(unescape(encodeURIComponent(content))), encoding: 'base64' }),
     }).then(data => data.sha);
 
-const createTree = (repo: string, baseTreeSha: string, tree: { path: string; mode: string; type: string; sha: string }[], token: string) =>
+const createTree = (repo: string, baseTreeSha: string, tree: { path: string; mode?: string; type?: string; sha: string | null }[], token: string) =>
     apiFetch(`/repos/${repo}/git/trees`, token.trim(), {
         method: 'POST',
         body: JSON.stringify({ base_tree: baseTreeSha, tree }),
@@ -77,10 +77,7 @@ const createIndividualCommitMessage = (file: RepoFile): string => {
 };
 
 export const commitMultipleFiles = async (
-    repo: string,
-    branch: string,
-    token: string,
-    files: RepoFile[],
+    repo: string, branch: string, token: string, files: RepoFile[]
 ) => {
     const cleanToken = token.trim();
     let parentCommitSha = await getLatestCommitSha(repo, branch, cleanToken);
@@ -89,12 +86,7 @@ export const commitMultipleFiles = async (
         const baseTreeSha = await getTreeForCommit(repo, parentCommitSha, cleanToken);
         const blobSha = await createBlob(repo, file.content, cleanToken);
         
-        const tree = [{
-            path: file.path,
-            mode: '100644', 
-            type: 'blob',
-            sha: blobSha,
-        }];
+        const tree = [{ path: file.path, mode: '100644', type: 'blob', sha: blobSha }];
 
         const newTreeSha = await createTree(repo, baseTreeSha, tree, cleanToken);
         const commitMessage = createIndividualCommitMessage(file);
@@ -105,4 +97,40 @@ export const commitMultipleFiles = async (
 
     await updateBranchRef(repo, branch, parentCommitSha, cleanToken);
     return parentCommitSha;
+};
+
+export const deletePaths = async (
+    repo: string, branch: string, token: string, pathToDelete: string, fullTree: { path: string, type: string }[]
+) => {
+    const cleanToken = token.trim();
+    const parentCommitSha = await getLatestCommitSha(repo, branch, cleanToken);
+    const baseTreeSha = await getTreeForCommit(repo, parentCommitSha, cleanToken);
+
+    const isFolder = !pathToDelete.split('/').pop()?.includes('.');
+    
+    const pathsToRemove = isFolder
+        ? fullTree.filter(item => item.path.startsWith(pathToDelete + '/')).map(item => item.path)
+        : [pathToDelete];
+    
+    if (fullTree.some(item => item.path === pathToDelete && item.type === 'blob')) {
+        pathsToRemove.push(pathToDelete);
+    }
+    
+    if (pathsToRemove.length === 0) {
+        throw new Error(`Path '${pathToDelete}' not found in the repository.`);
+    }
+
+    const tree = pathsToRemove.map(path => ({
+        path: path,
+        mode: '100644',
+        type: 'blob',
+        sha: null 
+    }));
+    
+    const newTreeSha = await createTree(repo, baseTreeSha, tree, cleanToken);
+    const commitMessage = `chore(cleanup): remove ${isFolder ? 'folder' : 'file'} ${pathToDelete}`;
+    const newCommitSha = await createCommit(repo, commitMessage, newTreeSha, parentCommitSha, cleanToken);
+    
+    await updateBranchRef(repo, branch, newCommitSha, cleanToken);
+    return newCommitSha;
 };

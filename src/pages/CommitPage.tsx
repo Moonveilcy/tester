@@ -4,6 +4,7 @@ import { ConfigSection } from '../components/commit/ConfigSection';
 import { FileUploadSection } from '../components/commit/FileUploadSection';
 import { ActionsSection } from '../components/commit/ActionsSection';
 import { CommitLogSection } from '../components/commit/CommitLogSection';
+import { DeleteSection } from '../components/commit/DeleteSection';
 
 export default function CommitPage() {
   const github = useGitHub();
@@ -42,7 +43,6 @@ export default function CommitPage() {
               onGenerateMessage={github.handleGenerateCommitMessage}
             />
           </div>
-          {/* Kolom Kanan */}
           <div className="space-y-8 mt-8 lg:mt-0">
              <ActionsSection 
               isLoading={github.isLoading}
@@ -52,6 +52,13 @@ export default function CommitPage() {
               onCommitAndPush={github.handleCommitAndPush}
               onFetchCommits={github.handleFetchCommits}
               onScanRepo={github.handleScanRepo}
+            />
+            <DeleteSection 
+              pathToDelete={github.pathToDelete}
+              setPathToDelete={github.setPathToDelete}
+              onDelete={github.handleDeletePath}
+              isLoading={github.isLoading}
+              repoFilled={!!github.token && !!github.repo}
             />
             <CommitLogSection commits={github.commits} />
           </div>

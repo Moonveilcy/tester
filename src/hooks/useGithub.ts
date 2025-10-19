@@ -8,32 +8,25 @@ export type NotificationType = {
   type: 'success' | 'error';
 };
 
-// Tipe data baru untuk menyimpan struktur file repo
 interface RepoTreeItem {
   path: string;
   type: 'blob' | 'tree';
 }
 
 export const useGitHub = () => {
-  // --- STATE MANAGEMENT ---
   const [token, setToken] = useState('');
   const [storeToken, setStoreToken] = useState(true);
   const [repo, setRepo] = useState('');
   const [branch, setBranch] = useState('main');
   const [geminiKey, setGeminiKey] = useState('');
-
   const [files, setFiles] = useState<RepoFile[]>([]);
   const [commits, setCommits] = useState<Commit[]>([]);
-  
-  // State baru untuk menyimpan hasil scan repo
   const [repoTree, setRepoTree] = useState<RepoTreeItem[]>([]);
-  
+  const [pathToDelete, setPathToDelete] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
-  
   const [notification, setNotification] = useState<NotificationType | null>(null);
 
-  // --- EFFECTS ---
   useEffect(() => {
     const storedToken = localStorage.getItem('githubToken');
     if (storedToken) {
@@ -49,19 +42,16 @@ export const useGitHub = () => {
     }
   }, [token, storeToken]);
 
-  // --- CORE FUNCTIONS ---
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
   };
 
   const processFiles = useCallback((fileList: FileList) => {
     const newFiles: RepoFile[] = Array.from(fileList).map(file => {
-      // PERBAIKAN: Cari path otomatis dari repoTree
       const existingFile = repoTree.find(item => item.path.endsWith(`/${file.name}`) || item.path === file.name);
-      
       return {
         name: file.name,
-        path: existingFile ? existingFile.path : file.name, // Gunakan path yang ada jika ditemukan
+        path: existingFile ? existingFile.path : file.name,
         content: '',
         status: 'idle',
         commitType: 'feat',
@@ -78,7 +68,7 @@ export const useGitHub = () => {
         };
         reader.readAsText(fileList[index]);
     });
-  }, [repoTree]); // Tambahkan repoTree sebagai dependency
+  }, [repoTree]);
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
@@ -101,17 +91,15 @@ export const useGitHub = () => {
     }));
   };
 
-  // --- API HANDLERS ---
   const handleScanRepo = useCallback(async () => {
     if (!repo || !branch || !token) {
         showNotification('Please fill in repository, branch, and token.', 'error');
         return;
     }
     setIsScanning(true);
-    setRepoTree([]); // Kosongkan tree sebelum scan baru
+    setRepoTree([]);
     try {
         const data = await githubApi.scanRepoTree(repo, branch, token);
-        // PERBAIKAN: Filter untuk hanya menyimpan file (blob)
         const fileBlobs = data.tree.filter((item: RepoTreeItem) => item.type === 'blob');
         setRepoTree(fileBlobs);
         showNotification(`Scan complete. Found ${fileBlobs.length} files in the repository.`, 'success');
@@ -156,7 +144,6 @@ export const useGitHub = () => {
       }
   }, [files, geminiKey, repo, branch, token]);
 
-
   const handleCommitAndPush = useCallback(async () => {
     const filesToCommit = files.filter(f => f.status === 'idle');
     if (filesToCommit.length === 0) return;
@@ -173,22 +160,29 @@ export const useGitHub = () => {
         setIsLoading(false);
     }
   }, [files, repo, branch, token, handleFetchCommits]);
+  
+  const handleDeletePath = useCallback(async () => {
+    if (!pathToDelete) return;
+    setIsLoading(true);
+    try {
+      await githubApi.deletePaths(repo, branch, token, pathToDelete, repoTree);
+      showNotification(`Successfully deleted path: ${pathToDelete}.`, 'success');
+      setPathToDelete('');
+      await handleScanRepo();
+      await handleFetchCommits();
+    } catch (error) {
+      showNotification((error as Error).message, 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pathToDelete, repo, branch, token, repoTree, handleScanRepo, handleFetchCommits]);
 
-  // --- RETURNED VALUES ---
   return {
-    token, setToken,
-    storeToken, setStoreToken,
-    repo, setRepo,
-    branch, setBranch,
-    geminiKey, setGeminiKey,
-    files, processFiles, removeFile, updateFilePath, updateFileCommitDetails,
-    commits,
-    isLoading,
-    isScanning,
-    notification, setNotification,
-    handleScanRepo,
-    handleFetchCommits,
-    handleGenerateCommitMessage,
-    handleCommitAndPush
+    token, setToken, storeToken, setStoreToken, repo, setRepo, branch, setBranch,
+    geminiKey, setGeminiKey, files, processFiles, removeFile, updateFilePath, updateFileCommitDetails,
+    commits, isLoading, isScanning, notification, setNotification,
+    pathToDelete, setPathToDelete,
+    handleScanRepo, handleFetchCommits, handleGenerateCommitMessage, handleCommitAndPush,
+    handleDeletePath
   };
 };
