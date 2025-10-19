@@ -1,16 +1,19 @@
+import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Hero from './sections/Hero';
-import About from './sections/About';
-import Feature from './sections/Feature';
+import LandingPage from './pages/LandingPage';
+import CommitPage from './pages/CommitPage';
 
 function App() {
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="bg-white">
       <Navbar />
-      <Hero />
-      <About />
-      <Feature />
+      <main>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/commit" element={<CommitPage />} />
+        </Routes>
+      </main>
       <Footer />
     </div>
   );
