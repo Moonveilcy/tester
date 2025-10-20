@@ -9,9 +9,25 @@ const isBinaryFile = (filename: string): boolean => {
     return binaryExtensions.some(ext => filename.toLowerCase().endsWith(ext));
 };
 
+const parseRepoName = (input: string): string => {
+    try {
+        if (input.startsWith('http')) {
+            const url = new URL(input);
+            const pathParts = url.pathname.split('/').filter(part => part);
+            if (pathParts.length >= 2) {
+                return pathParts[1];
+            }
+        }
+        return input.split('/').pop() || input;
+    } catch {
+        return input;
+    }
+};
+
+
 export const useZipUploader = () => {
     const [githubToken, setGithubToken] = useState('');
-    const [repoName, setRepoName] = useState('');
+    const [repoInput, setRepoInput] = useState('');
     const [branch, setBranch] = useState('main');
     const [zipFile, setZipFile] = useState<File | null>(null);
     const [progress, setProgress] = useState<UploadProgress>({ current: 0, total: 0, status: 'Idle' });
@@ -23,6 +39,8 @@ export const useZipUploader = () => {
     }, []);
 
     const handleUpload = useCallback(async () => {
+        const repoName = parseRepoName(repoInput);
+
         if (!zipFile || !repoName || !githubToken) {
             setNotification({ message: 'Please provide a ZIP file, repository name, and GitHub token.', type: 'error' });
             return;
@@ -32,7 +50,7 @@ export const useZipUploader = () => {
         setNotification(null);
 
         try {
-            setProgress(p => ({ ...p, status: 'Checking repository...' }));
+            setProgress(p => ({ ...p, status: `Checking if '${repoName}' is available...` }));
             const repoExists = await checkRepoExists(repoName, githubToken);
             if (repoExists) {
                 throw new Error(`Repository "${repoName}" already exists on your account.`);
@@ -54,9 +72,11 @@ export const useZipUploader = () => {
                     filesToCommit.push({ path: filename, content, isBinary });
                 });
             await Promise.all(filePromises);
+            if (filesToCommit.length === 0) {
+                throw new Error("The selected ZIP file is empty or invalid.");
+            }
 
             setProgress({ current: 0, total: filesToCommit.length, status: 'Uploading files...' });
-
             const repoUrl = await commitZipFilesToNewRepo(
                 repoName,
                 branch,
@@ -67,6 +87,7 @@ export const useZipUploader = () => {
 
             setProgress({ current: filesToCommit.length, total: filesToCommit.length, status: 'Completed' });
             setNotification({ message: `Successfully created and uploaded to ${repoUrl}`, type: 'success' });
+            setRepoInput('');
 
         } catch (error) {
             setNotification({ message: (error as Error).message, type: 'error' });
@@ -74,11 +95,11 @@ export const useZipUploader = () => {
         } finally {
             setZipFile(null);
         }
-    }, [zipFile, repoName, branch, githubToken]);
+    }, [zipFile, repoInput, branch, githubToken]);
 
     return {
         githubToken, setGithubToken,
-        repoName, setRepoName,
+        repoInput, setRepoInput,
         branch, setBranch,
         zipFile, setZipFile,
         progress,

@@ -2,7 +2,7 @@ import { ExtractedFile } from '../../types/uploadzip';
 
 const GITHUB_API_BASE = "https://api.github.com";
 
-const apiFetch = async (url: string, token: string, options: RequestInit = {}, expectJson = true) => {
+const apiFetch = async (url: string, token: string, options: RequestInit = {}) => {
     const response = await fetch(`${GITHUB_API_BASE}${url}`, {
         ...options,
         headers: {
@@ -15,7 +15,7 @@ const apiFetch = async (url: string, token: string, options: RequestInit = {}, e
         const errorData = await response.json().catch(() => ({ message: `GitHub API Error: ${response.statusText}` }));
         throw new Error(errorData.message || 'An unknown GitHub API error occurred.');
     }
-    if (!expectJson || response.status === 204) return null;
+    if (response.status === 204 || response.status === 201) return response.json().catch(() => null);
     return response.json();
 };
 
@@ -31,7 +31,6 @@ export const checkRepoExists = async (repoName: string, token: string) => {
         throw error;
     }
 };
-
 
 export const createNewRepo = (repoName: string, token: string) =>
     apiFetch('/user/repos', token, {
@@ -73,7 +72,6 @@ const updateBranchRef = (repo: string, branch: string, commitSha: string, token:
         body: JSON.stringify({ sha: commitSha }),
     });
 
-
 export const commitZipFilesToNewRepo = async (
     repoName: string,
     branch: string,
@@ -100,7 +98,7 @@ export const commitZipFilesToNewRepo = async (
 
     const tree = await Promise.all(blobPromises);
     const newTreeSha = await createTree(repo, baseTreeSha, tree, token);
-    const commitMessage = `Initial commit: Upload ${files.length} files from ZIP`;
+    const commitMessage = `feat: Add initial project files from ZIP upload`;
     const newCommitSha = await createCommit(repo, commitMessage, newTreeSha, parentCommitSha, token);
     await updateBranchRef(repo, branch, newCommitSha, token);
     

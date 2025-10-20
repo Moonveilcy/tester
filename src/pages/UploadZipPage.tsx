@@ -3,24 +3,19 @@ import { Toast } from '../components/commit/Toast';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/readme/Shared';
 import { UnapologeticButton } from '../components/readme/Shared';
 import { UploadCloud, XCircle, CheckCircle } from 'lucide-react';
-import JSZip from 'jszip';
-
-if (typeof window.JSZip === 'undefined') {
-  window.JSZip = JSZip;
-}
-
+import { GuideSection } from '../components/uploadzip/GuideSection';
 
 const ConfigSection = ({ uploader }) => (
     <Card className="bg-yellow-100">
         <CardHeader><CardTitle>Configuration</CardTitle></CardHeader>
         <CardContent className="space-y-4">
             <div>
-                <label className="block text-sm font-bold mb-1">New Repository Name</label>
+                <label className="block text-sm font-bold mb-1">New Repository Name or URL</label>
                 <input
                     type="text"
-                    placeholder="my-awesome-project"
-                    value={uploader.repoName}
-                    onChange={(e) => uploader.setRepoName(e.target.value)}
+                    placeholder="my-new-project or github.com/user/my-new-project"
+                    value={uploader.repoInput}
+                    onChange={(e) => uploader.setRepoInput(e.target.value)}
                     className="w-full p-3 border-2 border-black rounded-md bg-white focus:outline-none"
                 />
             </div>
@@ -31,6 +26,7 @@ const ConfigSection = ({ uploader }) => (
                     value={uploader.githubToken}
                     onChange={(e) => uploader.setGithubToken(e.target.value)}
                     className="w-full p-3 border-2 border-black rounded-md bg-white focus:outline-none"
+                    placeholder="ghp_..."
                 />
             </div>
         </CardContent>
@@ -138,6 +134,7 @@ export default function UploadZipPage() {
                     >
                         {isLoading ? 'Deploying...' : 'Create Repo & Deploy'}
                     </UnapologeticButton>
+                    <GuideSection />
                 </div>
             </main>
         </div>
