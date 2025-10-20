@@ -5,6 +5,7 @@ import { Transition } from '@headlessui/react';
 import { HomeIcon } from './icons/HomeIcon';
 import { CommitIcon } from './icons/CommitIcon';
 import { ReadmeIcon } from './icons/ReadmeIcon';
+import { ChangelogIcon } from './icons/ChangelogIcon';
 import { DiscordIcon } from './icons/DiscordIcon';
 
 export default function Navbar() {
@@ -14,6 +15,7 @@ export default function Navbar() {
     { name: 'Home', path: '/', icon: HomeIcon },
     { name: 'Commit & Push', path: '/commit', icon: CommitIcon },
     { name: 'README Generator', path: '/readme', icon: ReadmeIcon },
+    { name: 'Changelog AI', path: '/changelog', icon: ChangelogIcon },
     { name: 'Upload ZIP', path: '/upload-zip', icon: UploadCloud },
     { name: 'Discord', path: 'https://discord.gg/your-invite', icon: DiscordIcon, external: true },
   ];
