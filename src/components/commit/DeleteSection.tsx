@@ -1,4 +1,4 @@
-import { OffsetShadowCard, UnapologeticButton } from './Shared';
+import { Card, CardContent, CardHeader, CardTitle, UnapologeticButton } from './Shared';
 
 interface DeleteSectionProps {
   pathToDelete: string;
@@ -12,9 +12,11 @@ export const DeleteSection = (props: DeleteSectionProps) => {
   const { pathToDelete, setPathToDelete, onDelete, isLoading, repoFilled } = props;
 
   return (
-    <OffsetShadowCard color="pink" className="bg-red-300">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">Delete Path</h2>
-      <div className="space-y-4">
+    <Card className="bg-red-200">
+      <CardHeader>
+        <CardTitle>Delete Path</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         <input
           type="text"
           placeholder="Enter file or folder path to delete"
@@ -25,12 +27,11 @@ export const DeleteSection = (props: DeleteSectionProps) => {
         <UnapologeticButton
           onClick={onDelete}
           disabled={isLoading || !repoFilled || !pathToDelete}
-          variant="secondary"
-          className="bg-red-500 hover:bg-red-600"
+          className="w-full bg-red-500 hover:bg-red-600"
         >
           {isLoading ? 'Deleting...' : 'Delete Path'}
         </UnapologeticButton>
-      </div>
-    </OffsetShadowCard>
+      </CardContent>
+    </Card>
   );
 };
