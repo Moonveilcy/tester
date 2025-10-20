@@ -2,7 +2,7 @@ import { ExtractedFile } from '../../types/uploadzip';
 
 const GITHUB_API_BASE = "https://api.github.com";
 
-const apiFetch = async (url: string, token: string, options: RequestInit = {}) => {
+const apiFetch = async (url: string, token: string, options: RequestInit = {}, expectJson = true) => {
     const response = await fetch(`${GITHUB_API_BASE}${url}`, {
         ...options,
         headers: {
@@ -15,9 +15,23 @@ const apiFetch = async (url: string, token: string, options: RequestInit = {}) =
         const errorData = await response.json().catch(() => ({ message: `GitHub API Error: ${response.statusText}` }));
         throw new Error(errorData.message || 'An unknown GitHub API error occurred.');
     }
-    if (response.status === 204 || response.status === 201) return await response.json().catch(() => null);
+    if (!expectJson || response.status === 204) return null;
     return response.json();
 };
+
+export const checkRepoExists = async (repoName: string, token: string) => {
+    try {
+        const user = await apiFetch('/user', token);
+        await apiFetch(`/repos/${user.login}/${repoName}`, token);
+        return true; 
+    } catch (error) {
+        if ((error as Error).message.toLowerCase().includes('not found')) {
+            return false;
+        }
+        throw error;
+    }
+};
+
 
 export const createNewRepo = (repoName: string, token: string) =>
     apiFetch('/user/repos', token, {
@@ -25,8 +39,15 @@ export const createNewRepo = (repoName: string, token: string) =>
         body: JSON.stringify({
             name: repoName,
             private: false,
+            auto_init: true, 
         }),
     });
+
+const getLatestCommitSha = (repo: string, branch: string, token: string) =>
+    apiFetch(`/repos/${repo}/git/ref/heads/${branch}`, token).then(data => data.object.sha);
+
+const getTreeForCommit = (repo: string, commitSha: string, token: string) =>
+    apiFetch(`/repos/${repo}/git/commits/${commitSha}`, token).then(data => data.tree.sha);
 
 const createBlob = (repo: string, content: string, token: string) =>
     apiFetch(`/repos/${repo}/git/blobs`, token, {
@@ -34,16 +55,16 @@ const createBlob = (repo: string, content: string, token: string) =>
         body: JSON.stringify({ content, encoding: 'base64' }),
     }).then(data => data.sha);
 
-const createTree = (repo: string, tree: { path: string; mode: string; type: string; sha: string | null }[], token: string) =>
+const createTree = (repo: string, baseTreeSha: string, tree: { path: string; mode: string; type: string; sha: string | null }[], token: string) =>
     apiFetch(`/repos/${repo}/git/trees`, token, {
         method: 'POST',
-        body: JSON.stringify({ tree }),
+        body: JSON.stringify({ base_tree: baseTreeSha, tree }),
     }).then(data => data.sha);
 
-const createCommit = (repo: string, message: string, treeSha: string, token: string) =>
+const createCommit = (repo: string, message: string, treeSha: string, parentCommitSha: string, token: string) =>
     apiFetch(`/repos/${repo}/git/commits`, token, {
         method: 'POST',
-        body: JSON.stringify({ message, tree: treeSha, parents: [] }), // Initial commit has no parents
+        body: JSON.stringify({ message, tree: treeSha, parents: [parentCommitSha] }),
     }).then(data => data.sha);
 
 const updateBranchRef = (repo: string, branch: string, commitSha: string, token: string) =>
@@ -52,6 +73,7 @@ const updateBranchRef = (repo: string, branch: string, commitSha: string, token:
         body: JSON.stringify({ sha: commitSha }),
     });
 
+
 export const commitZipFilesToNewRepo = async (
     repoName: string,
     branch: string,
@@ -59,7 +81,11 @@ export const commitZipFilesToNewRepo = async (
     files: ExtractedFile[],
     onProgress: (progress: { current: number, total: number }) => void
 ) => {
-    const repo = `${(await apiFetch('/user', token)).login}/${repoName}`;
+    const user = await apiFetch('/user', token);
+    const repo = `${user.login}/${repoName}`;
+    
+    const parentCommitSha = await getLatestCommitSha(repo, branch, token);
+    const baseTreeSha = await getTreeForCommit(repo, parentCommitSha, token);
     
     const blobPromises = files.map(async (file, index) => {
         const sha = await createBlob(repo, file.content, token);
@@ -73,9 +99,9 @@ export const commitZipFilesToNewRepo = async (
     });
 
     const tree = await Promise.all(blobPromises);
-    const newTreeSha = await createTree(repo, tree, token);
+    const newTreeSha = await createTree(repo, baseTreeSha, tree, token);
     const commitMessage = `Initial commit: Upload ${files.length} files from ZIP`;
-    const newCommitSha = await createCommit(repo, commitMessage, newTreeSha, token);
+    const newCommitSha = await createCommit(repo, commitMessage, newTreeSha, parentCommitSha, token);
     await updateBranchRef(repo, branch, newCommitSha, token);
     
     return `https://github.com/${repo}`;

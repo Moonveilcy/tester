@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import JSZip from 'jszip';
-import { createNewRepo, commitZipFilesToNewRepo } from '../lib/uploadzip/api';
+import { createNewRepo, commitZipFilesToNewRepo, checkRepoExists } from '../lib/uploadzip/api';
 import { ExtractedFile, UploadProgress } from '../types/uploadzip';
 import { NotificationType } from './useGithub';
 
@@ -32,6 +32,12 @@ export const useZipUploader = () => {
         setNotification(null);
 
         try {
+            setProgress(p => ({ ...p, status: 'Checking repository...' }));
+            const repoExists = await checkRepoExists(repoName, githubToken);
+            if (repoExists) {
+                throw new Error(`Repository "${repoName}" already exists on your account.`);
+            }
+
             setProgress(p => ({ ...p, status: 'Creating repository...' }));
             await createNewRepo(repoName, githubToken);
 
@@ -47,7 +53,6 @@ export const useZipUploader = () => {
                     const content = await file.async('base64');
                     filesToCommit.push({ path: filename, content, isBinary });
                 });
-
             await Promise.all(filePromises);
 
             setProgress({ current: 0, total: filesToCommit.length, status: 'Uploading files...' });
