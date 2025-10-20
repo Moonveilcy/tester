@@ -1,13 +1,9 @@
-import { Webhooks, createNodeMiddleware } from "@octokit/webhooks";
+import { Webhooks } from "@octokit/webhooks";
 import { Octokit } from "@octokit/rest";
-import { Hono } from 'hono'
-import { handle } from 'hono/vercel'
 
 export const config = {
   runtime: 'edge',
 };
-
-const app = new Hono().basePath('/api')
 
 const webhooks = new Webhooks({
   secret: process.env.GITHUB_WEBHOOK_SECRET!,
@@ -49,33 +45,29 @@ async function analyzeCodeWithGemini(diff: string) {
 
 webhooks.on("pull_request.opened", async ({ payload }) => {
   const { repository, pull_request, installation } = payload;
-  const owner = repository.owner.login;
-  const repo = repository.name;
-  const prNumber = pull_request.number;
-  const installationId = installation?.id;
-
-  if (!installationId) {
-      console.error("Installation ID not found.");
+  
+  if (!installation) {
+      console.error("Installation object is missing.");
       return;
   }
-  
+
   const octokit = new Octokit({ auth: `token ${process.env.GITHUB_APP_TOKEN}` });
 
   try {
     const compare = await octokit.repos.compareCommits({
-      owner,
-      repo,
+      owner: repository.owner.login,
+      repo: repository.name,
       base: pull_request.base.sha,
       head: pull_request.head.sha,
     });
 
-    const diff = compare.data.files?.map(file => file.patch).join('\n') || "";
+    const diff = compare.data.files?.map(file => file.patch ?? '').join('\n') || "";
     const reviewComment = await analyzeCodeWithGemini(diff);
 
     await octokit.issues.createComment({
-      owner,
-      repo,
-      issue_number: prNumber,
+      owner: repository.owner.login,
+      repo: repository.name,
+      issue_number: pull_request.number,
       body: `**GitMoon AI Review** 🌙\n\n---\n\n${reviewComment}`,
     });
   } catch (error) {
@@ -83,20 +75,28 @@ webhooks.on("pull_request.opened", async ({ payload }) => {
   }
 });
 
+export default async function handler(request: Request) {
+    if (request.method !== 'POST') {
+        return new Response('Method Not Allowed', { status: 405 });
+    }
 
-app.post('/github-webhook', async (c) => {
-    const headers = {
-        "x-github-event": c.req.header('x-github-event') || "",
-        "x-hub-signature-256": c.req.header('x-hub-signature-256') || "",
-        "x-github-delivery": c.req.header('x-github-delivery') || "",
-    };
-    await webhooks.verifyAndReceive({
-        id: headers['x-github-delivery'],
-        name: headers['x-github-event'] as any,
-        signature: headers['x-hub-signature-256'],
-        payload: await c.req.text(),
-    });
-    return c.json({ message: 'Webhook received!' });
-})
+    try {
+        await webhooks.verifyAndReceive({
+            id: request.headers.get('x-github-delivery')!,
+            name: request.headers.get('x-github-event') as any,
+            signature: request.headers.get('x-hub-signature-256')!,
+            payload: await request.text(),
+        });
 
-export default handle(app)
+        return new Response(JSON.stringify({ message: 'Webhook received!' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } catch (error: any) {
+        console.error("Webhook Error:", error.message);
+        return new Response(JSON.stringify({ error: 'Webhook processing failed' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+}
