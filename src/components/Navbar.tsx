@@ -1,6 +1,6 @@
 import { useState, Fragment } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, UploadCloud } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 import { HomeIcon } from './icons/HomeIcon';
 import { CommitIcon } from './icons/CommitIcon';
@@ -14,6 +14,7 @@ export default function Navbar() {
     { name: 'Home', path: '/', icon: HomeIcon },
     { name: 'Commit & Push', path: '/commit', icon: CommitIcon },
     { name: 'README Generator', path: '/readme', icon: ReadmeIcon },
+    { name: 'Upload ZIP', path: '/upload-zip', icon: UploadCloud },
     { name: 'Discord', path: 'https://discord.gg/your-invite', icon: DiscordIcon, external: true },
   ];
   
@@ -46,44 +47,19 @@ export default function Navbar() {
 
       <Transition show={isOpen} as={Fragment}>
         <div className="relative z-40">
-          <Transition.Child
-            as={Fragment}
-            enter="transition-opacity ease-linear duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="transition-opacity ease-linear duration-300"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div 
-              className="fixed inset-0 bg-black/60" 
-              onClick={() => setIsOpen(false)}
-              aria-hidden="true"
-            />
+          <Transition.Child as={Fragment} enter="transition-opacity ease-linear duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="transition-opacity ease-linear duration-300" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-black/60" onClick={() => setIsOpen(false)} aria-hidden="true" />
           </Transition.Child>
 
-          <Transition.Child
-            as={Fragment}
-            enter="transition ease-in-out duration-300 transform"
-            enterFrom="-translate-x-full"
-            enterTo="translate-x-0"
-            leave="transition ease-in-out duration-300 transform"
-            leaveFrom="translate-x-0"
-            leaveTo="-translate-x-full"
-          >
+          <Transition.Child as={Fragment} enter="transition ease-in-out duration-300 transform" enterFrom="-translate-x-full" enterTo="translate-x-0" leave="transition ease-in-out duration-300 transform" leaveFrom="translate-x-0" leaveTo="-translate-x-full">
             <div className="fixed inset-y-0 left-0 flex">
               <div className="w-screen max-w-xs bg-black text-white flex flex-col p-4">
                 <div className="flex items-center justify-between mb-8">
                   <span className="text-2xl font-bold">Menu</span>
-                  <button 
-                    onClick={() => setIsOpen(false)}
-                    className="p-2 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-white"
-                    aria-label="Close menu"
-                  >
+                  <button onClick={() => setIsOpen(false)} className="p-2 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-white" aria-label="Close menu">
                     <X className="w-6 h-6" />
                   </button>
                 </div>
-
                 <nav className="flex-grow space-y-2">
                   {navLinks.map((link) => {
                     const Icon = link.icon;
