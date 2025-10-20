@@ -29,14 +29,17 @@ export const useChangelogGenerator = () => {
         setGeneratedChangelog('');
         setNotification(null);
 
+        const cleanRepo = repo.trim().replace(/^\/|\/$/g, '');
+
         try {
-            const commits = await changelogApi.getCommitsBetweenRefs(repo, startRef, endRef, githubToken);
+            const commits = await changelogApi.getCommitsBetweenRefs(cleanRepo, startRef, endRef, githubToken);
             if (commits.length === 0) {
                 setNotification({ message: 'No new commits found between the specified references.', type: 'success' });
+                setIsLoading(false); // Stop loading if no commits
                 return;
             }
             const commitMessages = commits.map(c => c.message);
-            const prompt = createChangelogPrompt(commitMessages);            
+            const prompt = createChangelogPrompt(commitMessages);          
             const changelogContent = await changelogApi.generateChangelogContent(prompt, geminiKey);
             
             setGeneratedChangelog(changelogContent);
