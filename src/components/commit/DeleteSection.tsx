@@ -27,10 +27,11 @@ export const DeleteSection = (props: DeleteSectionProps) => {
         <UnapologeticButton
           onClick={onDelete}
           disabled={isLoading || !repoFilled || !pathToDelete}
-          className="w-full bg-red-500 hover:bg-red-600"
+          variant="danger"
+          className="w-full"
         >
           {isLoading ? 'Deleting...' : 'Delete Path'}
-        </UnapologeticButton>
+        </A_UnapologeticButton>
       </CardContent>
     </Card>
   );
