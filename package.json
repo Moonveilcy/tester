@@ -1,7 +1,7 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "gitmoon-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
+    "@octokit/rest": "^22.0.0",
+    "@octokit/webhooks": "^14.1.3",
+    "dotenv": "^17.2.3",
     "framer-motion": "^12.23.24",
     "jszip": "^3.10.1",
     "lucide-react": "^0.344.0",
@@ -23,6 +26,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@types/node": "^20.14.12",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
