@@ -67,13 +67,8 @@ const updateBranchRef = (repo: string, branch: string, commitSha: string, token:
     });
 
 const createIndividualCommitMessage = (file: RepoFile): string => {
-    const getScope = (path: string): string => {
-        const pathParts = path.split('/').filter(p => p && !p.includes('.'));
-        return pathParts.length > 0 ? pathParts.pop()! : path.split('.')[0] || 'general';
-    };
-    const scope = getScope(file.path);
     const description = file.commitMessage || `update ${file.name}`;
-    return `${file.commitType}(${scope}): ${description}`;
+    return `${file.commitType}: ${description}`;
 };
 
 export const commitMultipleFiles = async (
@@ -128,7 +123,8 @@ export const deletePaths = async (
     }));
     
     const newTreeSha = await createTree(repo, baseTreeSha, tree, cleanToken);
-    const commitMessage = `chore(cleanup): remove ${isFolder ? 'folder' : 'file'} ${pathToDelete}`;
+    
+    const commitMessage = `chore: remove ${isFolder ? 'folder' : 'file'} ${pathToDelete}`;
     const newCommitSha = await createCommit(repo, commitMessage, newTreeSha, parentCommitSha, cleanToken);
     
     await updateBranchRef(repo, branch, newCommitSha, cleanToken);
