@@ -117,7 +117,7 @@ export default function ResponsiveCheckerPage() {
     setSize({ width: size.height, height: size.width });
     setIsRotated(!isRotated);
     setOpenMenu(null);
-    setActiveCategory(null); // Reset kategori aktif pas di-rotate
+    setActiveCategory(null);
   };
 
   const currentWidth = isRotated ? size.height : size.width;
@@ -153,7 +153,7 @@ export default function ResponsiveCheckerPage() {
               <input
                 type="text"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => setUrl(e.g.target.value)}
                 placeholder="Enter website URL..."
                 className="flex-grow w-full p-2 border-2 border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
@@ -169,7 +169,10 @@ export default function ResponsiveCheckerPage() {
             </div>
           </div>
 
-          <div className="w-full h-14 overflow-x-auto bg-gray-50">
+          {/* INI DIA PERUBAHANNYA:
+            Gw tambahin 'overflow-y-visible'
+          */}
+          <div className="w-full h-14 overflow-x-auto overflow-y-visible bg-gray-50">
             <div className="flex flex-nowrap items-center justify-center h-full gap-2 px-4 min-w-max">
               
               {(Object.keys(deviceGroups) as DeviceGroupKey[]).map((key) => {
