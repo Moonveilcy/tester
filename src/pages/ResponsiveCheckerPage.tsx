@@ -153,7 +153,6 @@ export default function ResponsiveCheckerPage() {
               <input
                 type="text"
                 value={url}
-                // INI YANG GW BENERIN (e.g.target.value -> e.target.value)
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="Enter website URL..."
                 className="flex-grow w-full p-2 border-2 border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -191,8 +190,14 @@ export default function ResponsiveCheckerPage() {
                       <span className="text-sm font-medium hidden md:inline">{group.label}</span>
                     </button>
 
+                    {/* BUG FIX: 
+                      Mengubah 'top-11' menjadi 'bottom-11'.
+                      Container button punya 'overflow-x-auto' dan 'h-14', 
+                      yang bikin menu kepotong (clipped) kalo muncul ke bawah (top-11).
+                      Dengan 'bottom-11', menu akan muncul ke atas dan nggak kepotong.
+                    */}
                     {openMenu === key && (
-                      <div className="absolute top-11 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 w-64 overflow-y-auto">
+                      <div className="absolute bottom-11 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 w-64 overflow-y-auto">
                         <ul className="p-1">
                           {group.devices.map((device) => (
                             <li key={device.name}>
