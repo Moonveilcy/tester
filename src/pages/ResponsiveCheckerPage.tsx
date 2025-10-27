@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Smartphone, Tablet, Monitor, Tv, RotateCw, Home, GitBranch, FileText } from 'lucide-react';
+import { Smartphone, Tablet, Monitor, Tv, RotateCw, Home, GitBranch, FileText, Camera } from 'lucide-react';
 
 const deviceGroups = {
   mobile: {
@@ -68,9 +68,11 @@ export default function ResponsiveCheckerPage() {
   const [isRotated, setIsRotated] = useState(false);
   const [openMenu, setOpenMenu] = useState<DeviceGroupKey | null>(null);
   const [activeCategory, setActiveCategory] = useState<DeviceGroupKey | null>('desktop');
+  const [isScreenshotting, setIsScreenshotting] = useState(false);
 
   const viewportMetaRef = useRef<HTMLMetaElement | null>(null);
   const originalViewportContentRef = useRef<string | null>(null);
+  const screenshotRef = useRef<HTMLDivElement>(null); // Ref buat target screenshot
 
   useEffect(() => {
     let viewportTag = document.querySelector('meta[name="viewport"]');
@@ -86,13 +88,23 @@ export default function ResponsiveCheckerPage() {
       originalViewportContentRef.current = 'width=device-width, initial-scale=1.0';
     }
     
-    // Set viewport lebar biar layout 'world'-nya gak di-zoom out di mobile
     viewportMetaRef.current.setAttribute('content', 'width=5000');
     
+    // Load script html2canvas
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.async = true;
+    script.id = 'html2canvas-script';
+    document.body.appendChild(script);
+
     return () => {
-      // Balikin viewport pas keluar halaman
       if (viewportMetaRef.current && originalViewportContentRef.current) {
         viewportMetaRef.current.setAttribute('content', originalViewportContentRef.current);
+      }
+      // Cleanup script
+      const loadedScript = document.getElementById('html2canvas-script');
+      if (loadedScript) {
+        document.body.removeChild(loadedScript);
       }
     };
   }, []);
@@ -122,19 +134,69 @@ export default function ResponsiveCheckerPage() {
     setActiveCategory(null);
   };
 
+  const handleScreenshot = () => {
+    if (!screenshotRef.current) {
+      console.error("Target elemen buat screenshot gak ketemu.");
+      return;
+    }
+    
+    // @ts-ignore - html2canvas di-load dari CDN
+    if (typeof html2canvas === 'undefined') {
+      console.error("html2canvas script belum keload.");
+      alert("Fitur screenshot belum siap, coba beberapa detik lagi.");
+      return;
+    }
+
+    setIsScreenshotting(true);
+    
+    // @ts-ignore
+    html2canvas(screenshotRef.current, {
+      allowTaint: true, // Coba render cross-origin (tapi bakal gagal kalo ada X-Frame-Options)
+      useCORS: true,     // Coba pake CORS
+      logging: false,    // Matikan log console
+      onclone: (document) => {
+        // Coba 'fix' iframe, tapi ini GAK AKAN ngebypass X-Frame-Options
+        // Ini cuma usaha terbaik, kemungkinan besar iframe cross-origin tetap blank
+        const iframe = document.querySelector('iframe');
+        if (iframe) {
+          try {
+            // Ini bakal error buat cross-origin dan itu normal
+            const iframeContent = iframe.contentWindow?.document.body.innerHTML;
+            if (iframeContent) {
+              // ... (logika kompleks buat nempel-in konten, tapi kita skip)
+            }
+          } catch (e) {
+            console.warn('Gagal akses iframe content buat screenshot (ini normal buat cross-origin):', e);
+          }
+        }
+      }
+    }).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = `screenshot-${currentWidth}x${currentHeight}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setIsScreenshotting(false);
+    }).catch((err) => {
+      console.error("Gagal screenshot:", err);
+      alert("Gagal mengambil screenshot.");
+      setIsScreenshotting(false);
+    });
+  };
+
+
   const currentWidth = isRotated ? size.height : size.width;
   const currentHeight = isRotated ? size.width : size.height;
 
-  // Kalkulasi lebar minimum 'dunia' biar gak aneh pas di-scroll
-  const minWorldWidth = currentWidth + 56 + 64; // 56px nav, 64px padding
+  const minWorldWidth = currentWidth + 56 + 64; 
 
   return (
-    // Container utama, set lebar minimum
     <div 
       className="flex min-w-full min-h-screen bg-gray-100 text-gray-800"
       style={{ minWidth: `${minWorldWidth}px` }}
     >
-      {/* Navigasi Kiri */}
       <nav className="w-14 h-screen bg-black text-gray-400 flex flex-col items-center py-4 gap-4 fixed top-0 left-0 z-30 shadow-lg">
         <a href="/" title="Home" className="p-2 rounded-lg hover:bg-gray-700 hover:text-white transition-colors">
           <Home className="w-6 h-6" />
@@ -150,12 +212,9 @@ export default function ResponsiveCheckerPage() {
         </a>
       </nav>
 
-      {/* Konten Utama */}
       <div className="flex-1 flex flex-col pl-14">
         
-        {/* Header Fixed */}
         <header className="w-full bg-white border-b border-gray-200 fixed top-0 left-14 right-0 z-20 shadow-sm">
-          {/* Bar URL */}
           <div className="h-14 flex items-center justify-between px-4 border-b border-gray-100">
             <form onSubmit={handleUrlSubmit} className="flex-grow flex gap-2 max-w-lg">
               <input
@@ -177,15 +236,7 @@ export default function ResponsiveCheckerPage() {
             </div>
           </div>
 
-          {/* FIX 1: 'overflow-x-auto' dihapus dari sini. 
-             Sekarang container ini gak akan 'motong' (clip) menu dropdown.
-             'min-h-[3.5rem]' ditambahin buat jaga tinggi kalo tombolnya nge-wrap.
-          */}
           <div className="w-full bg-gray-50 p-2 min-h-[3.5rem]">
-            {/* FIX 1: 'flex-wrap' ditambahin. 
-               Tombol akan otomatis turun kalo gak muat.
-               'h-14' dihapus, biarin 'flex-wrap' ngatur tingginya.
-            */}
             <div className="flex flex-wrap items-center justify-center gap-2 min-w-max">
               
               {(Object.keys(deviceGroups) as DeviceGroupKey[]).map((key) => {
@@ -194,7 +245,6 @@ export default function ResponsiveCheckerPage() {
                 const isActive = activeCategory === key && !isRotated;
                 
                 return (
-                  // 'relative' di sini udah bener
                   <div key={key} className="relative">
                     <button
                       onClick={() => setOpenMenu(openMenu === key ? null : key)}
@@ -207,9 +257,6 @@ export default function ResponsiveCheckerPage() {
                       <span className="text-sm font-medium hidden md:inline">{group.label}</span>
                     </button>
 
-                    {/* 'top-11' udah bener, biarin ke bawah.
-                       'z-50' pastiin dia di atas segalanya (kecuali `nav` z-30, tapi gak tumpang tindih)
-                    */}
                     {openMenu === key && (
                       <div className="absolute top-11 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 w-64 overflow-y-auto">
                         <ul className="p-1">
@@ -240,19 +287,35 @@ export default function ResponsiveCheckerPage() {
               >
                 <RotateCw className="w-5 h-5" />
               </button>
+
+              {/* TOMBOL SCREENSHOT BARU */}
+              <button
+                onClick={handleScreenshot}
+                disabled={isScreenshotting}
+                title="Screenshot"
+                className="flex items-center gap-2 p-2 rounded-md transition-colors flex-shrink-0 bg-white text-gray-600 hover:bg-gray-200 border border-gray-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isScreenshotting ? (
+                  <RotateCw className="w-5 h-5 animate-spin" /> 
+                ) : (
+                  <Camera className="w-5 h-5" />
+                )}
+                <span className="text-sm font-medium hidden md:inline">
+                  {isScreenshotting ? "Loading..." : "Screenshot"}
+                </span>
+              </button>
+
             </div>
           </div>
         </header>
 
-        {/* 'pt-28' (112px) adalah 2x 'h-14' (56px). Ini bener buat ngasih ruang buat header. */}
         <main className="flex-1 pt-28 bg-gray-200 bg-[radial-gradient(#bbb_1px,transparent_1px)] [background-size:20px_20px]">
           
-          {/* FIX 2: 'flex justify-center items-start' dihapus.
-             Sekarang konten di dalemnya (si iframe) bakal nempel di kiri atas.
-          */}
           <div className="w-full p-8 min-h-full">
             
+            {/* TARGET SCREENSHOT */}
             <div 
+              ref={screenshotRef} // Tambahin ref di sini
               className="bg-black p-4 rounded-xl shadow-2xl transition-all duration-300 ease-in-out"
               style={{ width: currentWidth + 32, height: currentHeight + 56 }} 
             >
