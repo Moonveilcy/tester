@@ -1,6 +1,6 @@
 import { useState, Fragment } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Menu, X, UploadCloud } from 'lucide-react';
+import { Menu, X, UploadCloud. Smartphone } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 import { HomeIcon } from './icons/HomeIcon';
 import { CommitIcon } from './icons/CommitIcon';
@@ -17,6 +17,7 @@ export default function Navbar() {
     { name: 'README Generator', path: '/readme', icon: ReadmeIcon },
     { name: 'Changelog AI', path: '/changelog', icon: ChangelogIcon },
     { name: 'Upload ZIP', path: '/upload-zip', icon: UploadCloud },
+    { name: 'Responsive Checker', path: '/responsive-checker', icon: Smartphone }, 
     { name: 'Discord', path: 'https://discord.gg/your-invite', icon: DiscordIcon, external: true },
   ];
   

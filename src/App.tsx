@@ -6,6 +6,7 @@ import CommitPage from './pages/CommitPage';
 import ReadmePage from './pages/ReadmePage';
 import UploadZipPage from './pages/UploadZipPage';
 import ChangelogPage from './pages/ChangelogPage';
+import ResponsiveCheckerPage from './pages/ResponsiveCheckerPage'; // Impor halaman baru
 
 export default function App() {
   return (
@@ -18,6 +19,8 @@ export default function App() {
           <Route path="/readme" element={<ReadmePage />} />
           <Route path="/upload-zip" element={<UploadZipPage />} />
           <Route path="/changelog" element={<ChangelogPage />} />
+          {/* Tambahkan rute baru di sini */}
+          <Route path="/responsive-checker" element={<ResponsiveCheckerPage />} /> 
         </Routes>
       </main>
       <Footer />
