@@ -169,8 +169,18 @@ export default function ResponsiveCheckerPage() {
             </div>
           </div>
 
-          <div className="w-full h-14 overflow-x-auto overflow-y-visible bg-gray-50">
-            <div className="flex flex-nowrap items-center justify-center h-full gap-2 px-4 min-w-max">
+          {/* BUG FIX: 
+            - 'h-14' dan 'overflow-y-visible' dihapus dari sini. 
+            - Container ini sekarang HANYA mengurus 'overflow-x-auto'.
+            - Karena tingginya gak di-fix, 'overflow-y' (default: visible) akan ngebiarin menu 'absolute' tampil.
+          */}
+          <div className="w-full overflow-x-auto bg-gray-50">
+            {/* BUG FIX: 
+              - 'h-14' dipindahin ke sini (dari parent-nya).
+              - 'h-full' dihapus.
+              - Ini nge-set tinggi bar tombolnya, tapi gak nge-clip menu.
+            */}
+            <div className="flex flex-nowrap items-center justify-center h-14 gap-2 px-4 min-w-max">
               
               {(Object.keys(deviceGroups) as DeviceGroupKey[]).map((key) => {
                 const group = deviceGroups[key];
@@ -191,13 +201,11 @@ export default function ResponsiveCheckerPage() {
                     </button>
 
                     {/* BUG FIX: 
-                      Mengubah 'top-11' menjadi 'bottom-11'.
-                      Container button punya 'overflow-x-auto' dan 'h-14', 
-                      yang bikin menu kepotong (clipped) kalo muncul ke bawah (top-11).
-                      Dengan 'bottom-11', menu akan muncul ke atas dan nggak kepotong.
+                      - Dibalikin ke 'top-11' biar muncul ke bawah.
+                      - Ini sekarang bisa jalan karena parent-nya (yang 'overflow-x-auto') gak punya 'h-14' lagi.
                     */}
                     {openMenu === key && (
-                      <div className="absolute bottom-11 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 w-64 overflow-y-auto">
+                      <div className="absolute top-11 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 w-64 overflow-y-auto">
                         <ul className="p-1">
                           {group.devices.map((device) => (
                             <li key={device.name}>

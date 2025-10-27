@@ -13,15 +13,10 @@ export default function App() {
   const isCheckerPage = location.pathname === '/responsive-checker';
 
   return (
-    // Hapus 'flex flex-col' jika di checker page, biarkan page-nya ngatur layout sendiri
     <div className={`bg-white min-h-screen ${isCheckerPage ? '' : 'flex flex-col'}`}>
       
-      {/* Sembunyikan Navbar jika di checker page */}
       {!isCheckerPage && <Navbar />}
 
-      {/* Ganti 'flex-grow' jadi 'h-screen' di checker page 
-        biar <main> ngisi seluruh layar
-      */}
       <main className={isCheckerPage ? 'h-screen' : 'flex-grow'}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -33,7 +28,6 @@ export default function App() {
         </Routes>
       </main>
       
-      {/* Sembunyikan Footer jika di checker page */}
       {!isCheckerPage && <Footer />}
     </div>
   );
