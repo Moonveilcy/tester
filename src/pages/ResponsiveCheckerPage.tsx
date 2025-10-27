@@ -86,9 +86,11 @@ export default function ResponsiveCheckerPage() {
       originalViewportContentRef.current = 'width=device-width, initial-scale=1.0';
     }
     
+    // Set viewport lebar biar layout 'world'-nya gak di-zoom out di mobile
     viewportMetaRef.current.setAttribute('content', 'width=5000');
     
     return () => {
+      // Balikin viewport pas keluar halaman
       if (viewportMetaRef.current && originalViewportContentRef.current) {
         viewportMetaRef.current.setAttribute('content', originalViewportContentRef.current);
       }
@@ -123,13 +125,16 @@ export default function ResponsiveCheckerPage() {
   const currentWidth = isRotated ? size.height : size.width;
   const currentHeight = isRotated ? size.width : size.height;
 
-  const minWorldWidth = currentWidth + 56 + 64;
+  // Kalkulasi lebar minimum 'dunia' biar gak aneh pas di-scroll
+  const minWorldWidth = currentWidth + 56 + 64; // 56px nav, 64px padding
 
   return (
+    // Container utama, set lebar minimum
     <div 
       className="flex min-w-full min-h-screen bg-gray-100 text-gray-800"
       style={{ minWidth: `${minWorldWidth}px` }}
     >
+      {/* Navigasi Kiri */}
       <nav className="w-14 h-screen bg-black text-gray-400 flex flex-col items-center py-4 gap-4 fixed top-0 left-0 z-30 shadow-lg">
         <a href="/" title="Home" className="p-2 rounded-lg hover:bg-gray-700 hover:text-white transition-colors">
           <Home className="w-6 h-6" />
@@ -145,9 +150,12 @@ export default function ResponsiveCheckerPage() {
         </a>
       </nav>
 
+      {/* Konten Utama */}
       <div className="flex-1 flex flex-col pl-14">
         
+        {/* Header Fixed */}
         <header className="w-full bg-white border-b border-gray-200 fixed top-0 left-14 right-0 z-20 shadow-sm">
+          {/* Bar URL */}
           <div className="h-14 flex items-center justify-between px-4 border-b border-gray-100">
             <form onSubmit={handleUrlSubmit} className="flex-grow flex gap-2 max-w-lg">
               <input
@@ -169,18 +177,16 @@ export default function ResponsiveCheckerPage() {
             </div>
           </div>
 
-          {/* BUG FIX: 
-            - 'h-14' dan 'overflow-y-visible' dihapus dari sini. 
-            - Container ini sekarang HANYA mengurus 'overflow-x-auto'.
-            - Karena tingginya gak di-fix, 'overflow-y' (default: visible) akan ngebiarin menu 'absolute' tampil.
+          {/* FIX 1: 'overflow-x-auto' dihapus dari sini. 
+             Sekarang container ini gak akan 'motong' (clip) menu dropdown.
+             'min-h-[3.5rem]' ditambahin buat jaga tinggi kalo tombolnya nge-wrap.
           */}
-          <div className="w-full overflow-x-auto bg-gray-50">
-            {/* BUG FIX: 
-              - 'h-14' dipindahin ke sini (dari parent-nya).
-              - 'h-full' dihapus.
-              - Ini nge-set tinggi bar tombolnya, tapi gak nge-clip menu.
+          <div className="w-full bg-gray-50 p-2 min-h-[3.5rem]">
+            {/* FIX 1: 'flex-wrap' ditambahin. 
+               Tombol akan otomatis turun kalo gak muat.
+               'h-14' dihapus, biarin 'flex-wrap' ngatur tingginya.
             */}
-            <div className="flex flex-nowrap items-center justify-center h-14 gap-2 px-4 min-w-max">
+            <div className="flex flex-wrap items-center justify-center gap-2 min-w-max">
               
               {(Object.keys(deviceGroups) as DeviceGroupKey[]).map((key) => {
                 const group = deviceGroups[key];
@@ -188,6 +194,7 @@ export default function ResponsiveCheckerPage() {
                 const isActive = activeCategory === key && !isRotated;
                 
                 return (
+                  // 'relative' di sini udah bener
                   <div key={key} className="relative">
                     <button
                       onClick={() => setOpenMenu(openMenu === key ? null : key)}
@@ -200,9 +207,8 @@ export default function ResponsiveCheckerPage() {
                       <span className="text-sm font-medium hidden md:inline">{group.label}</span>
                     </button>
 
-                    {/* BUG FIX: 
-                      - Dibalikin ke 'top-11' biar muncul ke bawah.
-                      - Ini sekarang bisa jalan karena parent-nya (yang 'overflow-x-auto') gak punya 'h-14' lagi.
+                    {/* 'top-11' udah bener, biarin ke bawah.
+                       'z-50' pastiin dia di atas segalanya (kecuali `nav` z-30, tapi gak tumpang tindih)
                     */}
                     {openMenu === key && (
                       <div className="absolute top-11 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 w-64 overflow-y-auto">
@@ -238,9 +244,13 @@ export default function ResponsiveCheckerPage() {
           </div>
         </header>
 
+        {/* 'pt-28' (112px) adalah 2x 'h-14' (56px). Ini bener buat ngasih ruang buat header. */}
         <main className="flex-1 pt-28 bg-gray-200 bg-[radial-gradient(#bbb_1px,transparent_1px)] [background-size:20px_20px]">
           
-          <div className="w-full p-8 flex justify-center items-start min-h-full">
+          {/* FIX 2: 'flex justify-center items-start' dihapus.
+             Sekarang konten di dalemnya (si iframe) bakal nempel di kiri atas.
+          */}
+          <div className="w-full p-8 min-h-full">
             
             <div 
               className="bg-black p-4 rounded-xl shadow-2xl transition-all duration-300 ease-in-out"
