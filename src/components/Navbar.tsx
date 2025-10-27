@@ -37,7 +37,7 @@ export default function Navbar() {
           </button>
 
           <div className="flex items-center gap-3">
-            <span className="text-xl font-bold text-gray-800">GitMoon</span>
+            <span className="text-xl font-bold text-gray-800">GitVeilcy</span>
             <img 
                 src="/avatar.png" 
                 alt="Avatar" 
