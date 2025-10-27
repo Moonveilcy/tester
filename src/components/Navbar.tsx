@@ -1,6 +1,6 @@
 import { useState, Fragment } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Menu, X, UploadCloud. Smartphone } from 'lucide-react';
+import { Menu, X, UploadCloud, Smartphone } from 'lucide-react';
 import { Transition } from '@headlessui/react';
 import { HomeIcon } from './icons/HomeIcon';
 import { CommitIcon } from './icons/CommitIcon';
