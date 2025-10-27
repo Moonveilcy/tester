@@ -1,38 +1,84 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Smartphone, Tablet, Monitor, RotateCw, Home, Zap, GitBranch, FileText } from 'lucide-react';
+import { Smartphone, Tablet, Monitor, Tv, RotateCw, Home, GitBranch, FileText } from 'lucide-react';
 
-// Definisikan ukuran device, mirip kayak di web itu
-const devicePresets = [
-  { name: 'Mobile (S)', width: 360, height: 740, icon: Smartphone },
-  { name: 'Mobile (M)', width: 390, height: 844, icon: Smartphone },
-  { name: 'Mobile (L)', width: 430, height: 932, icon: Smartphone },
-  { name: 'Tablet (M)', width: 768, height: 1024, icon: Tablet },
-  { name: 'Tablet (L)', width: 1024, height: 768, icon: Tablet },
-  { name: 'Desktop', width: 1280, height: 800, icon: Monitor },
-  { name: 'Full HD', width: 1920, height: 1080, icon: Monitor },
-  { name: '4K', width: 3840, height: 2160, icon: Monitor },
-];
+const deviceGroups = {
+  mobile: {
+    icon: Smartphone,
+    label: "Mobile",
+    devices: [
+      { name: "iPhone 14/15 Pro Max", width: 430, height: 932 },
+      { name: "iPhone 14/15 Pro", width: 393, height: 852 },
+      { name: "iPhone 12/13/14/15", width: 390, height: 844 },
+      { name: "iPhone X/XS/11 Pro", width: 375, height: 812 },
+      { name: "iPhone 8 Plus", width: 414, height: 736 },
+      { name: "iPhone 8", width: 375, height: 667 },
+      { name: "Samsung Galaxy S22 Ultra", width: 412, height: 892 },
+      { name: "Samsung Galaxy S22", width: 360, height: 780 },
+      { name: "Google Pixel 7", width: 412, height: 915 },
+      { name: "Google Pixel 6", width: 412, height: 892 },
+      { name: "Mobile (S)", width: 360, height: 740 },
+      { name: "Mobile (M)", width: 390, height: 844 },
+      { name: "Mobile (L)", width: 430, height: 932 },
+    ]
+  },
+  tablet: {
+    icon: Tablet,
+    label: "Tablet",
+    devices: [
+      { name: "iPad Pro 12.9\"", width: 1024, height: 1366 },
+      { name: "iPad Pro 11\"", width: 834, height: 1194 },
+      { name: "iPad Air 4/5", width: 820, height: 1180 },
+      { name: "iPad 10th Gen", width: 810, height: 1080 },
+      { name: "Samsung Tab S8 Ultra", width: 922, height: 1476 },
+      { name: "Samsung Tab S8", width: 800, height: 1280 },
+      { name: "Surface Pro 8", width: 960, height: 1440 },
+    ]
+  },
+  desktop: {
+    icon: Monitor,
+    label: "Desktop",
+    devices: [
+      { name: "Laptop (13\")", width: 1280, height: 800 },
+      { name: "Laptop (15\")", width: 1366, height: 768 },
+      { name: "Common", width: 1440, height: 900 },
+      { name: "HD+", width: 1600, height: 900 },
+      { name: "Full HD (1080p)", width: 1920, height: 1080 },
+      { name: "QHD (1440p)", width: 2560, height: 1440 },
+      { name: "4K (2160p)", width: 3840, height: 2160 },
+    ]
+  },
+  tv: {
+    icon: Tv,
+    label: "Television",
+    devices: [
+      { name: "TV (720p)", width: 1280, height: 720 },
+      { name: "TV (1080p)", width: 1920, height: 1080 },
+      { name: "TV (4K)", width: 3840, height: 2160 },
+      { name: "TV (8K)", width: 7680, height: 4320 },
+    ]
+  }
+};
+
+type DeviceGroupKey = keyof typeof deviceGroups;
 
 export default function ResponsiveCheckerPage() {
   const [url, setUrl] = useState('https://example.com');
   const [displayUrl, setDisplayUrl] = useState('https://example.com');
   const [size, setSize] = useState({ width: 1280, height: 800 });
   const [isRotated, setIsRotated] = useState(false);
+  const [openMenu, setOpenMenu] = useState<DeviceGroupKey | null>(null);
+  const [activeCategory, setActiveCategory] = useState<DeviceGroupKey | null>('desktop');
 
-  // --- INI DIA LOGIKA VIEWPORT YANG HILANG ---
   const viewportMetaRef = useRef<HTMLMetaElement | null>(null);
   const originalViewportContentRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // 1. Cari tag viewport yang udah ada
     let viewportTag = document.querySelector('meta[name="viewport"]');
     
     if (viewportTag) {
-      // 2. Simpen tag & konten aslinya
       viewportMetaRef.current = viewportTag as HTMLMetaElement;
       originalViewportContentRef.current = viewportTag.getAttribute('content');
     } else {
-      // Kalo gak ada, bikin baru
       viewportTag = document.createElement('meta');
       viewportTag.setAttribute('name', 'viewport');
       document.head.appendChild(viewportTag);
@@ -40,20 +86,14 @@ export default function ResponsiveCheckerPage() {
       originalViewportContentRef.current = 'width=device-width, initial-scale=1.0';
     }
     
-    // 3. Set viewport baru yang super lebar (INI KUNCINYA)
-    // Ini bilang ke browser, "Anggap layar lu lebarnya 5000px"
     viewportMetaRef.current.setAttribute('content', 'width=5000');
     
-    // 4. Cleanup function (dijalanin pas keluar dari halaman ini)
     return () => {
       if (viewportMetaRef.current && originalViewportContentRef.current) {
-        // 5. Balikin viewport ke setelan aslinya
         viewportMetaRef.current.setAttribute('content', originalViewportContentRef.current);
       }
     };
-  }, []); // Array kosong berarti cuma jalan sekali pas masuk, dan cleanup pas keluar
-  // --- SELESAI LOGIKA VIEWPORT ---
-
+  }, []);
 
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,36 +103,33 @@ export default function ResponsiveCheckerPage() {
     }
     setDisplayUrl(finalUrl);
     setIsRotated(false);
+    setOpenMenu(null);
   };
 
-  const setDevice = (width: number, height: number) => {
+  const setDevice = (width: number, height: number, category: DeviceGroupKey) => {
     setSize({ width, height });
     setIsRotated(false);
+    setOpenMenu(null);
+    setActiveCategory(category);
   };
 
   const rotate = () => {
     setSize({ width: size.height, height: size.width });
     setIsRotated(!isRotated);
+    setOpenMenu(null);
+    setActiveCategory(null); // Reset kategori aktif pas di-rotate
   };
 
   const currentWidth = isRotated ? size.height : size.width;
   const currentHeight = isRotated ? size.width : size.height;
 
-  // Kita tentuin lebar minimal 'world' kita.
-  // Harus cukup lebar buat nampung iframe + sidebar + padding
-  const minWorldWidth = currentWidth + 56 + 64; // 56px sidebar + 64px padding
+  const minWorldWidth = currentWidth + 56 + 64;
 
   return (
-    // HAPUS 'overflow-hidden' dan 'h-screen'.
-    // Ganti 'w-full' jadi 'min-w-full'
-    // 'min-h-screen' biar tingginya minimal se-layar
     <div 
       className="flex min-w-full min-h-screen bg-gray-100 text-gray-800"
-      // Kasih tau 'world' nya harus selebar apa
       style={{ minWidth: `${minWorldWidth}px` }}
     >
-      {/* 1. Sidebar Kiri (Fixed) */}
-      {/* 'position: fixed' sekarang ngikut ke viewport 5000px, jadi dia nempel di kiri */}
       <nav className="w-14 h-screen bg-black text-gray-400 flex flex-col items-center py-4 gap-4 fixed top-0 left-0 z-30 shadow-lg">
         <a href="/" title="Home" className="p-2 rounded-lg hover:bg-gray-700 hover:text-white transition-colors">
           <Home className="w-6 h-6" />
@@ -108,13 +145,9 @@ export default function ResponsiveCheckerPage() {
         </a>
       </nav>
 
-      {/* 2. Main Area (Kanan Sidebar) */}
-      <div className="flex-1 flex flex-col pl-14"> {/* Offset sidebar (pl-14) */}
+      <div className="flex-1 flex flex-col pl-14">
         
-        {/* 2a. Header Atas (Fixed) */}
-        {/* 'position: fixed' juga ngikut viewport 5000px */}
-        <header className="w-full bg-white border-b border-gray-200 fixed top-0 left-14 right-0 z-20 shadow-sm"> {/* Offset sidebar (left-14) */}
-          {/* Baris 1: URL Input & Ukuran */}
+        <header className="w-full bg-white border-b border-gray-200 fixed top-0 left-14 right-0 z-20 shadow-sm">
           <div className="h-14 flex items-center justify-between px-4 border-b border-gray-100">
             <form onSubmit={handleUrlSubmit} className="flex-grow flex gap-2 max-w-lg">
               <input
@@ -136,30 +169,48 @@ export default function ResponsiveCheckerPage() {
             </div>
           </div>
 
-          {/* Baris 2: Device Buttons */}
           <div className="w-full h-14 overflow-x-auto bg-gray-50">
             <div className="flex flex-nowrap items-center justify-center h-full gap-2 px-4 min-w-max">
-              {/* ... (Isi tombol-tombol device, GAK ADA PERUBAHAN DISINI) ... */}
-              {devicePresets.map((device) => {
-                const Icon = device.icon;
-                const isBaseActive = device.width === size.width && device.height === size.height && !isRotated;
-                const isRotatedActive = device.width === size.height && device.height === size.width && isRotated;
-                const isActive = isBaseActive || isRotatedActive;
-
+              
+              {(Object.keys(deviceGroups) as DeviceGroupKey[]).map((key) => {
+                const group = deviceGroups[key];
+                const Icon = group.icon;
+                const isActive = activeCategory === key && !isRotated;
+                
                 return (
-                  <button
-                    key={device.name}
-                    onClick={() => setDevice(device.width, device.height)}
-                    title={`${device.name} (${device.width}x${device.height})`}
-                    className={`flex items-center gap-2 p-2 rounded-md transition-colors flex-shrink-0 ${
-                      isActive ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-200'
-                    } border border-gray-300 shadow-sm`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="text-sm font-medium hidden md:inline">{device.name}</span>
-                  </button>
+                  <div key={key} className="relative">
+                    <button
+                      onClick={() => setOpenMenu(openMenu === key ? null : key)}
+                      title={group.label}
+                      className={`flex items-center gap-2 p-2 rounded-md transition-colors flex-shrink-0 ${
+                        isActive ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-200'
+                      } border border-gray-300 shadow-sm`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="text-sm font-medium hidden md:inline">{group.label}</span>
+                    </button>
+
+                    {openMenu === key && (
+                      <div className="absolute top-11 left-0 z-50 bg-white rounded-lg shadow-lg border border-gray-200 max-h-72 w-64 overflow-y-auto">
+                        <ul className="p-1">
+                          {group.devices.map((device) => (
+                            <li key={device.name}>
+                              <button
+                                onClick={() => setDevice(device.width, device.height, key)}
+                                className="w-full text-left p-2 rounded-md hover:bg-gray-100 flex justify-between items-center text-sm"
+                              >
+                                <span>{device.name}</span>
+                                <span className="text-gray-500 font-mono">{device.width}x{device.height}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
+
               <button
                 onClick={rotate}
                 title="Rotate"
@@ -173,25 +224,18 @@ export default function ResponsiveCheckerPage() {
           </div>
         </header>
 
-        {/* 2b. Content Canvas (BISA SCROLL) */}
-        {/* HAPUS 'overflow-auto' dari sini. Biar browser yang scroll */}
         <main className="flex-1 pt-28 bg-gray-200 bg-[radial-gradient(#bbb_1px,transparent_1px)] [background-size:20px_20px]">
           
-          {/* Wrapper buat ngasih padding & centering */}
-          {/* 'min-h-full' biar tingginya ngikutin <main> */}
           <div className="w-full p-8 flex justify-center items-start min-h-full">
             
-            {/* Bingkai Iframe */}
             <div 
               className="bg-black p-4 rounded-xl shadow-2xl transition-all duration-300 ease-in-out"
               style={{ width: currentWidth + 32, height: currentHeight + 56 }} 
             >
-              {/* Info ukuran di dalam bingkai */}
               <p className="text-center text-white text-sm mb-2 font-mono">{currentWidth} x {currentHeight}</p>
               
-              {/* Iframe */}
               <iframe
-                key={displayUrl} // Force re-render pas URL ganti
+                key={displayUrl}
                 src={displayUrl}
                 title="Responsive Preview"
                 className="bg-white"
