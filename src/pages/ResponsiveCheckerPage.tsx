@@ -43,7 +43,10 @@ export default function ResponsiveCheckerPage() {
 
   return (
     <div className="bg-white text-gray-800 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
+      {/* Tambahkan 'overflow-x-hidden' di div utama 
+        ini untuk mencegah seluruh halaman ikut bergeser 
+      */}
+      <div className="max-w-7xl mx-auto overflow-x-hidden">
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-800">Responsive Checker</h1>
           <p className="text-lg text-gray-600 mt-2">Test your website's responsiveness across various devices.</p>
@@ -67,36 +70,54 @@ export default function ResponsiveCheckerPage() {
         </form>
 
         {/* Kontrol Device */}
-        <div className="flex flex-wrap items-center justify-center gap-2 p-4 bg-gray-100 rounded-lg mb-8 shadow-sm">
-          {devicePresets.map((device) => {
-            const Icon = device.icon;
-            const isActive = device.width === currentWidth && device.height === currentHeight;
-            return (
-              <button
-                key={device.name}
-                onClick={() => setDevice(device.width, device.height)}
-                title={`${device.name} (${device.width}x${device.height})`}
-                className={`flex items-center gap-2 p-2 rounded-md transition-colors ${
-                  isActive ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-200'
-                } border border-gray-300`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-sm font-medium hidden md:inline">{device.name}</span>
-              </button>
-            );
-          })}
-          <button
-            onClick={rotate}
-            title="Rotate"
-            className="flex items-center gap-2 p-2 rounded-md bg-white text-gray-600 hover:bg-gray-200 border border-gray-300"
-          >
-            <RotateCw className="w-5 h-5" />
-          </button>
+        {/* Bungkus kontrol device dengan 'overflow-x-auto' 
+          agar tombol-tombolnya bisa di-scroll di HP
+        */}
+        <div className="w-full overflow-x-auto pb-2 mb-6">
+          <div className="flex flex-nowrap items-center justify-start sm:justify-center gap-2 p-4 bg-gray-100 rounded-lg shadow-sm min-w-max">
+            {devicePresets.map((device) => {
+              const Icon = device.icon;
+              const isActive = device.width === currentWidth && device.height === currentHeight;
+              return (
+                <button
+                  key={device.name}
+                  onClick={() => setDevice(device.width, device.height)}
+                  title={`${device.name} (${device.width}x${device.height})`}
+                  className={`flex items-center gap-2 p-2 rounded-md transition-colors flex-shrink-0 ${
+                    isActive ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-200'
+                  } border border-gray-300`}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="text-sm font-medium hidden md:inline">{device.name}</span>
+                  {/* Tampilkan nama di mobile jika aktif */}
+                  <span className="text-sm font-medium md:hidden">{isActive ? device.name : ''}</span>
+                </button>
+              );
+            })}
+            <button
+              onClick={rotate}
+              title="Rotate"
+              className="flex items-center gap-2 p-2 rounded-md bg-white text-gray-600 hover:bg-gray-200 border border-gray-300 flex-shrink-0"
+            >
+              <RotateCw className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
+
         {/* Tampilan Iframe */}
-        <div className="flex justify-center">
-          <div className="bg-gray-800 p-4 rounded-xl shadow-2xl transition-all duration-300 ease-in-out" style={{ width: currentWidth + 32, height: currentHeight + 32 }}>
+        {/* INI PERUBAHAN UTAMA:
+          1. 'w-full' & 'overflow-x-auto': Membuat wrapper ini bisa di-scroll ke samping.
+          2. 'justify-start md:justify-center': Di HP mulai dari kiri, di desktop di tengah.
+        */}
+        <div className="flex justify-start md:justify-center w-full overflow-x-auto py-2">
+          {/* 1. 'flex-shrink-0': Mencegah 'card' ini jadi gepeng/ikut mengecil.
+            2. Hapus style 'height': Biarkan tingginya otomatis.
+          */}
+          <div
+            className="bg-gray-800 p-4 rounded-xl shadow-2xl transition-all duration-300 ease-in-out flex-shrink-0"
+            style={{ width: currentWidth + 32 }} // Lebar = lebar iframe + padding (16px * 2)
+          >
             <p className="text-center text-white text-sm mb-2 font-mono">{currentWidth} x {currentHeight}</p>
             <iframe
               src={displayUrl}
